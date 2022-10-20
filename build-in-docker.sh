@@ -7,6 +7,9 @@
 # host docker.
 #################################################################
 
+# exit on failures
+set -e
+
 # build the prysm-builder image
 docker build -f Dockerfile.builder -t prysm-builder .
 
