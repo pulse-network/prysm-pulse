@@ -29,3 +29,8 @@ echo ""
 echo "Build Complete! Bazel outputs are available in the following directories:"
 ls | grep bazel- | tr '\n' '\t'
 echo ""
+
+# print new docker images
+echo ""
+echo "Docker images imported:"
+docker image ls | head
