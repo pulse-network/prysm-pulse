@@ -1,4 +1,6 @@
-# Prysm: An Ethereum Consensus Implementation Written in Go
+# Prysm-Pulse: A PulseChain Consensus Implementation Written in Go
+
+Fork of upstream: https://github.com/prysmaticlabs/prysm
 
 [![Build status](https://badge.buildkite.com/b555891daf3614bae4284dcf365b2340cefc0089839526f096.svg?branch=master)](https://buildkite.com/prysmatic-labs/prysm)
 [![Go Report Card](https://goreportcard.com/badge/github.com/prysmaticlabs/prysm)](https://goreportcard.com/report/github.com/prysmaticlabs/prysm)
