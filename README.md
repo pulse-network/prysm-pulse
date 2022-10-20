@@ -35,3 +35,11 @@ Want to get involved? Check out our [Contribution Guide](https://docs.prylabs.ne
 ## Legal Disclaimer
 
 [Terms of Use](/TERMS_OF_SERVICE.md)
+
+# Bazel-In-Docker Build
+
+Bazel has some picky dependencies and requires an older Ubuntu 18.04 to build working docker images (see: https://github.com/bazelbuild/rules_go/issues/3167). Included is a [Dockerfile](Dockerfile.builder) and [shell script](build-in-docker.sh) to produce consistent builds using Bazel-in-Docker while also mounting local directories for Bazel caching across repeat builds.
+
+```
+./build-in-docker.sh
+```
