@@ -23,6 +23,7 @@ RUN curl -o bazelisk -L https://github.com/bazelbuild/bazelisk/releases/download
 RUN mkdir /app
 WORKDIR /app
 
+# prevent git warnings throughout build process
 RUN git config --global --add safe.directory /app
 
 # perform the build then print output directories
