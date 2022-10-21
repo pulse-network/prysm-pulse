@@ -11,10 +11,10 @@
 set -e
 
 # build the prysm-builder image
-docker build -f Dockerfile.builder -t prysm-builder .
+docker build --platform linux/amd64 -f Dockerfile.builder -t prysm-builder .
 
 # run the build
-docker run -it -v $(pwd):/app -v $(pwd)/.bazel-in-docker-cache:/root/.cache prysm-builder
+docker run --platform linux/amd64 -it -v $(pwd):/app -v $(pwd)/.bazel-in-docker-cache:/root/.cache prysm-builder
 
 # source the outputs file to build the correct symlink directories bazel-*
 source .bazel-in-docker-outputs
