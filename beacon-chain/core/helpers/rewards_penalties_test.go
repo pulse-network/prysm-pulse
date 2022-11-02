@@ -23,7 +23,7 @@ func TestTotalBalance_OK(t *testing.T) {
 	balance := TotalBalance(state, []primitives.ValidatorIndex{0, 1, 2, 3})
 	wanted := state.Validators()[0].EffectiveBalance + state.Validators()[1].EffectiveBalance +
 		state.Validators()[2].EffectiveBalance + state.Validators()[3].EffectiveBalance
-	assert.Equal(t, wanted, balance, "Incorrect TotalBalance")
+	assert.Equal(t, wanted, balance.Uint64(), "Incorrect TotalBalance")
 }
 
 func TestTotalBalance_ReturnsEffectiveBalanceIncrement(t *testing.T) {
@@ -32,7 +32,7 @@ func TestTotalBalance_ReturnsEffectiveBalanceIncrement(t *testing.T) {
 
 	balance := TotalBalance(state, []primitives.ValidatorIndex{})
 	wanted := params.BeaconConfig().EffectiveBalanceIncrement
-	assert.Equal(t, wanted, balance, "Incorrect TotalBalance")
+	assert.Equal(t, wanted, balance.Uint64(), "Incorrect TotalBalance")
 }
 
 func TestGetBalance_OK(t *testing.T) {
@@ -70,7 +70,7 @@ func TestTotalActiveBalance(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, uint64(test.vCount)*params.BeaconConfig().MaxEffectiveBalance, bal)
+		require.Equal(t, uint64(test.vCount)*params.BeaconConfig().MaxEffectiveBalance, bal.Uint64())
 	}
 }
 
@@ -93,7 +93,7 @@ func TestTotalActiveBal_ReturnMin(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, params.BeaconConfig().EffectiveBalanceIncrement, bal)
+		require.Equal(t, params.BeaconConfig().EffectiveBalanceIncrement, bal.Uint64())
 	}
 }
 
@@ -117,7 +117,7 @@ func TestTotalActiveBalance_WithCache(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, uint64(test.wantCount)*params.BeaconConfig().MaxEffectiveBalance, bal)
+		require.Equal(t, uint64(test.wantCount)*params.BeaconConfig().MaxEffectiveBalance, bal.Uint64())
 	}
 }
 

@@ -1,6 +1,7 @@
 package doublylinkedtree
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/prysmaticlabs/prysm/v4/config/features"
@@ -79,7 +80,7 @@ func (f *ForkChoice) ShouldOverrideFCU() (override bool) {
 	// }
 
 	// Only orphan a block if the head LMD vote is weak
-	if head.weight*100 > f.store.committeeWeight*params.BeaconConfig().ReorgWeightThreshold {
+	if f.headVoteIsStrong() {
 		return
 	}
 
@@ -138,7 +139,7 @@ func (f *ForkChoice) GetProposerHead() [32]byte {
 	}
 
 	// Only orphan a block if the head LMD vote is weak
-	if head.weight*100 > f.store.committeeWeight*params.BeaconConfig().ReorgWeightThreshold {
+	if f.headVoteIsStrong() {
 		return head.root
 	}
 
@@ -157,4 +158,14 @@ func (f *ForkChoice) GetProposerHead() [32]byte {
 		return head.root
 	}
 	return parent.root
+}
+
+// headVoteIsStrong return true if the head weight is beyond the reorg weight threshold.
+func (f *ForkChoice) headVoteIsStrong() bool {
+	head := f.store.headNode
+	headWeight := big.NewInt(100)
+	headWeight.Mul(headWeight, head.weight)
+	threshold := new(big.Int).SetUint64(params.BeaconConfig().ReorgWeightThreshold)
+	threshold.Mul(threshold, f.store.committeeWeight)
+	return headWeight.Cmp(threshold) == 1
 }

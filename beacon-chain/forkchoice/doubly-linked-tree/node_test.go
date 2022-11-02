@@ -2,6 +2,7 @@ package doublylinkedtree
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	"github.com/prysmaticlabs/prysm/v4/config/params"
@@ -27,15 +28,15 @@ func TestNode_ApplyWeightChanges_PositiveChange(t *testing.T) {
 	// The updated balances of each node is 100
 	s := f.store
 
-	s.nodeByRoot[indexToHash(1)].balance = 100
-	s.nodeByRoot[indexToHash(2)].balance = 100
-	s.nodeByRoot[indexToHash(3)].balance = 100
+	s.nodeByRoot[indexToHash(1)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(2)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(3)].balance = big.NewInt(100)
 
 	assert.NoError(t, s.treeRootNode.applyWeightChanges(ctx))
 
-	assert.Equal(t, uint64(300), s.nodeByRoot[indexToHash(1)].weight)
-	assert.Equal(t, uint64(200), s.nodeByRoot[indexToHash(2)].weight)
-	assert.Equal(t, uint64(100), s.nodeByRoot[indexToHash(3)].weight)
+	assert.Equal(t, uint64(300), s.nodeByRoot[indexToHash(1)].weight.Uint64())
+	assert.Equal(t, uint64(200), s.nodeByRoot[indexToHash(2)].weight.Uint64())
+	assert.Equal(t, uint64(100), s.nodeByRoot[indexToHash(3)].weight.Uint64())
 }
 
 func TestNode_ApplyWeightChanges_NegativeChange(t *testing.T) {
@@ -53,19 +54,19 @@ func TestNode_ApplyWeightChanges_NegativeChange(t *testing.T) {
 
 	// The updated balances of each node is 100
 	s := f.store
-	s.nodeByRoot[indexToHash(1)].weight = 400
-	s.nodeByRoot[indexToHash(2)].weight = 400
-	s.nodeByRoot[indexToHash(3)].weight = 400
+	s.nodeByRoot[indexToHash(1)].weight = big.NewInt(400)
+	s.nodeByRoot[indexToHash(2)].weight = big.NewInt(400)
+	s.nodeByRoot[indexToHash(3)].weight = big.NewInt(400)
 
-	s.nodeByRoot[indexToHash(1)].balance = 100
-	s.nodeByRoot[indexToHash(2)].balance = 100
-	s.nodeByRoot[indexToHash(3)].balance = 100
+	s.nodeByRoot[indexToHash(1)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(2)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(3)].balance = big.NewInt(100)
 
 	assert.NoError(t, s.treeRootNode.applyWeightChanges(ctx))
 
-	assert.Equal(t, uint64(300), s.nodeByRoot[indexToHash(1)].weight)
-	assert.Equal(t, uint64(200), s.nodeByRoot[indexToHash(2)].weight)
-	assert.Equal(t, uint64(100), s.nodeByRoot[indexToHash(3)].weight)
+	assert.Equal(t, uint64(300), s.nodeByRoot[indexToHash(1)].weight.Uint64())
+	assert.Equal(t, uint64(200), s.nodeByRoot[indexToHash(2)].weight.Uint64())
+	assert.Equal(t, uint64(100), s.nodeByRoot[indexToHash(3)].weight.Uint64())
 }
 
 func TestNode_UpdateBestDescendant_NonViableChild(t *testing.T) {
@@ -108,8 +109,8 @@ func TestNode_UpdateBestDescendant_HigherWeightChild(t *testing.T) {
 	require.NoError(t, f.InsertNode(ctx, state, blkRoot))
 
 	s := f.store
-	s.nodeByRoot[indexToHash(1)].weight = 100
-	s.nodeByRoot[indexToHash(2)].weight = 200
+	s.nodeByRoot[indexToHash(1)].weight = big.NewInt(100)
+	s.nodeByRoot[indexToHash(2)].weight = big.NewInt(200)
 	assert.NoError(t, s.treeRootNode.updateBestDescendant(ctx, 1, 1, 1))
 
 	assert.Equal(t, 2, len(s.treeRootNode.children))
@@ -128,8 +129,8 @@ func TestNode_UpdateBestDescendant_LowerWeightChild(t *testing.T) {
 	require.NoError(t, f.InsertNode(ctx, state, blkRoot))
 
 	s := f.store
-	s.nodeByRoot[indexToHash(1)].weight = 200
-	s.nodeByRoot[indexToHash(2)].weight = 100
+	s.nodeByRoot[indexToHash(1)].weight = big.NewInt(200)
+	s.nodeByRoot[indexToHash(2)].weight = big.NewInt(100)
 	assert.NoError(t, s.treeRootNode.updateBestDescendant(ctx, 1, 1, 1))
 
 	assert.Equal(t, 2, len(s.treeRootNode.children))
@@ -245,8 +246,8 @@ func TestNode_SetFullyValidated(t *testing.T) {
 	for i, respNode := range respNodes {
 		require.Equal(t, storeNodes[i].slot, respNode.Slot)
 		require.DeepEqual(t, storeNodes[i].root[:], respNode.BlockRoot)
-		require.Equal(t, storeNodes[i].balance, respNode.Balance)
-		require.Equal(t, storeNodes[i].weight, respNode.Weight)
+		require.Equal(t, storeNodes[i].balance.String(), respNode.Balance)
+		require.Equal(t, storeNodes[i].weight.String(), respNode.Weight)
 		require.Equal(t, storeNodes[i].optimistic, respNode.ExecutionOptimistic)
 		require.Equal(t, storeNodes[i].justifiedEpoch, respNode.JustifiedEpoch)
 		require.Equal(t, storeNodes[i].unrealizedJustifiedEpoch, respNode.UnrealizedJustifiedEpoch)

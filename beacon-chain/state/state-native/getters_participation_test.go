@@ -34,9 +34,9 @@ func TestState_UnrealizedCheckpointBalances(t *testing.T) {
 	allActive := params.BeaconConfig().MinGenesisActiveValidatorCount * params.BeaconConfig().MaxEffectiveBalance
 	active, previous, current, err := state.UnrealizedCheckpointBalances()
 	require.NoError(t, err)
-	require.Equal(t, allActive, active)
-	require.Equal(t, uint64(0), current)
-	require.Equal(t, uint64(0), previous)
+	require.Equal(t, allActive, active.Uint64())
+	require.Equal(t, uint64(0), current.Uint64())
+	require.Equal(t, uint64(0), previous.Uint64())
 
 	// Add some votes in the last two epochs:
 	base.CurrentEpochParticipation[0] = 0xFF
@@ -47,9 +47,9 @@ func TestState_UnrealizedCheckpointBalances(t *testing.T) {
 	require.NoError(t, err)
 	active, previous, current, err = state.UnrealizedCheckpointBalances()
 	require.NoError(t, err)
-	require.Equal(t, allActive, active)
-	require.Equal(t, params.BeaconConfig().MaxEffectiveBalance, current)
-	require.Equal(t, 2*params.BeaconConfig().MaxEffectiveBalance, previous)
+	require.Equal(t, allActive, active.Uint64())
+	require.Equal(t, params.BeaconConfig().MaxEffectiveBalance, current.Uint64())
+	require.Equal(t, 2*params.BeaconConfig().MaxEffectiveBalance, previous.Uint64())
 
 	// Slash some validators
 	validators[0].Slashed = true
@@ -57,8 +57,8 @@ func TestState_UnrealizedCheckpointBalances(t *testing.T) {
 	require.NoError(t, err)
 	active, previous, current, err = state.UnrealizedCheckpointBalances()
 	require.NoError(t, err)
-	require.Equal(t, allActive-params.BeaconConfig().MaxEffectiveBalance, active)
-	require.Equal(t, uint64(0), current)
-	require.Equal(t, params.BeaconConfig().MaxEffectiveBalance, previous)
+	require.Equal(t, allActive-params.BeaconConfig().MaxEffectiveBalance, active.Uint64())
+	require.Equal(t, uint64(0), current.Uint64())
+	require.Equal(t, params.BeaconConfig().MaxEffectiveBalance, previous.Uint64())
 
 }

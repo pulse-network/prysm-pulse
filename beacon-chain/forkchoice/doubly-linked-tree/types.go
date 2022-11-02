@@ -1,6 +1,7 @@
 package doublylinkedtree
 
 import (
+	"math/big"
 	"sync"
 
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/forkchoice"
@@ -30,7 +31,7 @@ type Store struct {
 	proposerBoostRoot             [fieldparams.RootLength]byte           // latest block root that was boosted after being received in a timely manner.
 	previousProposerBoostRoot     [fieldparams.RootLength]byte           // previous block root that was boosted after being received in a timely manner.
 	previousProposerBoostScore    uint64                                 // previous proposer boosted root score.
-	committeeWeight               uint64                                 // tracks the total active validator balance divided by the number of slots per Epoch.
+	committeeWeight               *big.Int                               // tracks the total active validator balance divided by the number of slots per Epoch.
 	treeRootNode                  *Node                                  // the root node of the store tree.
 	headNode                      *Node                                  // last head Node
 	nodeByRoot                    map[[fieldparams.RootLength]byte]*Node // nodes indexed by roots.
@@ -55,8 +56,8 @@ type Node struct {
 	unrealizedJustifiedEpoch primitives.Epoch             // the epoch that would be justified if the block would be advanced to the next epoch.
 	finalizedEpoch           primitives.Epoch             // finalizedEpoch of this node.
 	unrealizedFinalizedEpoch primitives.Epoch             // the epoch that would be finalized if the block would be advanced to the next epoch.
-	balance                  uint64                       // the balance that voted for this node directly
-	weight                   uint64                       // weight of this node: the total balance including children
+	balance                  *big.Int                     // the balance that voted for this node directly
+	weight                   *big.Int                     // weight of this node: the total balance including children
 	bestDescendant           *Node                        // bestDescendant node of this node.
 	optimistic               bool                         // whether the block has been fully validated or not
 	timestamp                uint64                       // The timestamp when the node was inserted.

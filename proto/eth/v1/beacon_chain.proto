@@ -343,9 +343,9 @@ message ForkChoiceNode {
     // Unrealized finalized epoch of the current forkchoice node.
     uint64 unrealized_finalized_epoch = 7 [(ethereum.eth.ext.cast_type) = "github.com/prysmaticlabs/prysm/v4/consensus-types/primitives.Epoch"];
     // Current balance of the current forkchoice node.
-    uint64 balance = 8;
+    string balance = 8;
     // Current weight of the current forkchoice node.
-    uint64 weight = 9;
+    string weight = 9;
     // Optimistic status of the current forkchoice node.
     bool execution_optimistic = 10;
     // Execution payload block hash of the current forkchoice node.

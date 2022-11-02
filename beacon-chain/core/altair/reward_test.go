@@ -2,6 +2,7 @@ package altair_test
 
 import (
 	"math"
+	"math/big"
 	"testing"
 
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/altair"
@@ -73,56 +74,56 @@ func Test_BaseRewardWithTotalBalance(t *testing.T) {
 	tests := []struct {
 		name          string
 		valIdx        primitives.ValidatorIndex
-		activeBalance uint64
+		activeBalance *big.Int
 		want          uint64
 		errString     string
 	}{
 		{
 			name:          "active balance is 0",
 			valIdx:        0,
-			activeBalance: 0,
+			activeBalance: big.NewInt(0),
 			want:          0,
 			errString:     "active balance can't be 0",
 		},
 		{
 			name:          "unknown validator",
 			valIdx:        2,
-			activeBalance: 1,
+			activeBalance: big.NewInt(1),
 			want:          0,
 			errString:     "index 2 out of range",
 		},
 		{
 			name:          "active balance is 1",
 			valIdx:        0,
-			activeBalance: 1,
+			activeBalance: big.NewInt(1),
 			want:          2048000000000,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 1eth",
 			valIdx:        0,
-			activeBalance: params.BeaconConfig().EffectiveBalanceIncrement,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement),
 			want:          64765024,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 32eth",
 			valIdx:        0,
-			activeBalance: params.BeaconConfig().MaxEffectiveBalance,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance),
 			want:          11448672,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 32eth * 1m validators",
 			valIdx:        0,
-			activeBalance: params.BeaconConfig().MaxEffectiveBalance * 1e9,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance * 1e9),
 			want:          544,
 			errString:     "",
 		},
 		{
 			name:          "active balance is max uint64",
 			valIdx:        0,
-			activeBalance: math.MaxUint64,
+			activeBalance: new(big.Int).SetUint64(math.MaxUint64),
 			want:          448,
 			errString:     "",
 		},
@@ -143,43 +144,43 @@ func Test_BaseRewardPerIncrement(t *testing.T) {
 	helpers.ClearCache()
 	tests := []struct {
 		name          string
-		activeBalance uint64
+		activeBalance *big.Int
 		want          uint64
 		errString     string
 	}{
 		{
 			name:          "active balance is 0",
-			activeBalance: 0,
+			activeBalance: big.NewInt(0),
 			want:          0,
 			errString:     "active balance can't be 0",
 		},
 		{
 			name:          "active balance is 1",
-			activeBalance: 1,
+			activeBalance: big.NewInt(1),
 			want:          64000000000,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 1eth",
-			activeBalance: params.BeaconConfig().EffectiveBalanceIncrement,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement),
 			want:          2023907,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 32eth",
-			activeBalance: params.BeaconConfig().MaxEffectiveBalance,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance),
 			want:          357771,
 			errString:     "",
 		},
 		{
 			name:          "active balance is 32eth * 1m validators",
-			activeBalance: params.BeaconConfig().MaxEffectiveBalance * 1e9,
+			activeBalance: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance * 1e9),
 			want:          17,
 			errString:     "",
 		},
 		{
 			name:          "active balance is max uint64",
-			activeBalance: math.MaxUint64,
+			activeBalance: new(big.Int).SetUint64(math.MaxUint64),
 			want:          14,
 			errString:     "",
 		},

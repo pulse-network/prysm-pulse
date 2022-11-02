@@ -4,6 +4,7 @@ package cache
 
 import (
 	"encoding/binary"
+	"math/big"
 	"sync"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -55,7 +56,7 @@ func (c *BalanceCache) Clear() {
 }
 
 // AddTotalEffectiveBalance adds a new total effective balance entry for current balance for state `st` into the cache.
-func (c *BalanceCache) AddTotalEffectiveBalance(st state.ReadOnlyBeaconState, balance uint64) error {
+func (c *BalanceCache) AddTotalEffectiveBalance(st state.ReadOnlyBeaconState, balance *big.Int) error {
 	key, err := balanceCacheKey(st)
 	if err != nil {
 		return err
@@ -69,10 +70,11 @@ func (c *BalanceCache) AddTotalEffectiveBalance(st state.ReadOnlyBeaconState, ba
 }
 
 // Get returns the current epoch's effective balance for state `st` in cache.
-func (c *BalanceCache) Get(st state.ReadOnlyBeaconState) (uint64, error) {
+func (c *BalanceCache) Get(st state.ReadOnlyBeaconState) (*big.Int, error) {
 	key, err := balanceCacheKey(st)
+	zero := big.NewInt(0)
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	c.lock.RLock()
@@ -81,10 +83,10 @@ func (c *BalanceCache) Get(st state.ReadOnlyBeaconState) (uint64, error) {
 	value, exists := c.cache.Get(key)
 	if !exists {
 		balanceCacheMiss.Inc()
-		return 0, ErrNotFound
+		return zero, ErrNotFound
 	}
 	balanceCacheHit.Inc()
-	return value.(uint64), nil
+	return value.(*big.Int), nil
 }
 
 // Given input state `st`, balance key is constructed as:
