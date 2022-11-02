@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math/big"
 	"sort"
 	"strconv"
 	"testing"
@@ -1568,18 +1569,20 @@ func TestServer_GetValidatorParticipation_CurrentAndPrevEpoch(t *testing.T) {
 
 	res, err := bs.GetValidatorParticipation(ctx, &ethpb.GetValidatorParticipationRequest{QueryFilter: &ethpb.GetValidatorParticipationRequest_Epoch{Epoch: 1}})
 	require.NoError(t, err)
-
+	effectiveBal := new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
+	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          float32(params.BeaconConfig().EffectiveBalanceIncrement) / float32(validatorCount*params.BeaconConfig().MaxEffectiveBalance),
-		VotedEther:                       params.BeaconConfig().EffectiveBalanceIncrement,
-		EligibleEther:                    validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochActiveGwei:           validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochAttestingGwei:        params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochTargetAttestingGwei:  params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochActiveGwei:          validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochAttestingGwei:       params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochTargetAttestingGwei: params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochHeadAttestingGwei:   params.BeaconConfig().EffectiveBalanceIncrement,
+		GlobalParticipationRate:          new(big.Int).Div(effectiveBalIncr, valCountTimesEffBal).String(),
+		VotedEther:                       effectiveBalIncr.String(),
+		EligibleEther:                    valCountTimesEffBal.String(),
+		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
+		CurrentEpochAttestingGwei:        effectiveBalIncr.String(),
+		CurrentEpochTargetAttestingGwei:  effectiveBalIncr.String(),
+		PreviousEpochActiveGwei:          valCountTimesEffBal.String(),
+		PreviousEpochAttestingGwei:       effectiveBalIncr.String(),
+		PreviousEpochTargetAttestingGwei: effectiveBalIncr.String(),
+		PreviousEpochHeadAttestingGwei:   effectiveBalIncr.String(),
 	}
 	assert.DeepEqual(t, true, res.Finalized, "Incorrect validator participation respond")
 	assert.DeepEqual(t, wanted, res.Participation, "Incorrect validator participation respond")
@@ -1648,17 +1651,20 @@ func TestServer_GetValidatorParticipation_OrphanedUntilGenesis(t *testing.T) {
 	res, err := bs.GetValidatorParticipation(ctx, &ethpb.GetValidatorParticipationRequest{QueryFilter: &ethpb.GetValidatorParticipationRequest_Epoch{Epoch: 1}})
 	require.NoError(t, err)
 
+	effectiveBal := new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
+	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          float32(params.BeaconConfig().EffectiveBalanceIncrement) / float32(validatorCount*params.BeaconConfig().MaxEffectiveBalance),
-		VotedEther:                       params.BeaconConfig().EffectiveBalanceIncrement,
-		EligibleEther:                    validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochActiveGwei:           validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochAttestingGwei:        params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochTargetAttestingGwei:  params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochActiveGwei:          validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochAttestingGwei:       params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochTargetAttestingGwei: params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochHeadAttestingGwei:   params.BeaconConfig().EffectiveBalanceIncrement,
+		GlobalParticipationRate:          new(big.Int).Div(effectiveBalIncr, valCountTimesEffBal).String(),
+		VotedEther:                       effectiveBalIncr.String(),
+		EligibleEther:                    valCountTimesEffBal.String(),
+		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
+		CurrentEpochAttestingGwei:        effectiveBalIncr.String(),
+		CurrentEpochTargetAttestingGwei:  effectiveBalIncr.String(),
+		PreviousEpochActiveGwei:          valCountTimesEffBal.String(),
+		PreviousEpochAttestingGwei:       effectiveBalIncr.String(),
+		PreviousEpochTargetAttestingGwei: effectiveBalIncr.String(),
+		PreviousEpochHeadAttestingGwei:   effectiveBalIncr.String(),
 	}
 	assert.DeepEqual(t, true, res.Finalized, "Incorrect validator participation respond")
 	assert.DeepEqual(t, wanted, res.Participation, "Incorrect validator participation respond")
@@ -1759,17 +1765,20 @@ func runGetValidatorParticipationCurrentAndPrevEpoch(t *testing.T, genState stat
 	res, err := bs.GetValidatorParticipation(ctx, &ethpb.GetValidatorParticipationRequest{QueryFilter: &ethpb.GetValidatorParticipationRequest_Epoch{Epoch: 0}})
 	require.NoError(t, err)
 
+	effectiveBal := new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
+	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          1,
-		VotedEther:                       validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		EligibleEther:                    validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochActiveGwei:           validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochAttestingGwei:        validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochTargetAttestingGwei:  validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochActiveGwei:          validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochAttestingGwei:       validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochTargetAttestingGwei: validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochHeadAttestingGwei:   validatorCount * params.BeaconConfig().MaxEffectiveBalance,
+		GlobalParticipationRate:          big.NewInt(1).String(),
+		VotedEther:                       valCountTimesEffBal.String(),
+		EligibleEther:                    valCountTimesEffBal.String(),
+		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
+		CurrentEpochAttestingGwei:        valCountTimesEffBal.String(),
+		CurrentEpochTargetAttestingGwei:  valCountTimesEffBal.String(),
+		PreviousEpochActiveGwei:          valCountTimesEffBal.String(),
+		PreviousEpochAttestingGwei:       valCountTimesEffBal.String(),
+		PreviousEpochTargetAttestingGwei: valCountTimesEffBal.String(),
+		PreviousEpochHeadAttestingGwei:   valCountTimesEffBal.String(),
 	}
 	assert.DeepEqual(t, true, res.Finalized, "Incorrect validator participation respond")
 	assert.DeepEqual(t, wanted, res.Participation, "Incorrect validator participation respond")
@@ -1778,16 +1787,16 @@ func runGetValidatorParticipationCurrentAndPrevEpoch(t *testing.T, genState stat
 	require.NoError(t, err)
 
 	wanted = &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          1,
-		VotedEther:                       validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		EligibleEther:                    validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochActiveGwei:           validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		CurrentEpochAttestingGwei:        params.BeaconConfig().EffectiveBalanceIncrement, // Empty because after one epoch, current participation rotates to previous
-		CurrentEpochTargetAttestingGwei:  params.BeaconConfig().EffectiveBalanceIncrement,
-		PreviousEpochActiveGwei:          validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochAttestingGwei:       validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochTargetAttestingGwei: validatorCount * params.BeaconConfig().MaxEffectiveBalance,
-		PreviousEpochHeadAttestingGwei:   validatorCount * params.BeaconConfig().MaxEffectiveBalance,
+		GlobalParticipationRate:          big.NewInt(1).String(),
+		VotedEther:                       valCountTimesEffBal.String(),
+		EligibleEther:                    valCountTimesEffBal.String(),
+		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
+		CurrentEpochAttestingGwei:        effectiveBalIncr.String(), // Empty because after one epoch, current participation rotates to previous
+		CurrentEpochTargetAttestingGwei:  effectiveBalIncr.String(),
+		PreviousEpochActiveGwei:          valCountTimesEffBal.String(),
+		PreviousEpochAttestingGwei:       valCountTimesEffBal.String(),
+		PreviousEpochTargetAttestingGwei: valCountTimesEffBal.String(),
+		PreviousEpochHeadAttestingGwei:   valCountTimesEffBal.String(),
 	}
 	assert.DeepEqual(t, true, res.Finalized, "Incorrect validator participation respond")
 	assert.DeepEqual(t, wanted, res.Participation, "Incorrect validator participation respond")

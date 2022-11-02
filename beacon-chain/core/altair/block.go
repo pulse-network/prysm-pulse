@@ -2,6 +2,7 @@ package altair
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/helpers"
@@ -148,13 +149,13 @@ func VerifySyncCommitteeSig(s state.BeaconState, syncKeys []bls.PublicKey, syncS
 }
 
 // SyncRewards returns the proposer reward and the sync participant reward given the total active balance in state.
-func SyncRewards(activeBalance uint64) (proposerReward, participantReward uint64, err error) {
+func SyncRewards(activeBalance *big.Int) (proposerReward, participantReward uint64, err error) {
 	cfg := params.BeaconConfig()
-	totalActiveIncrements := activeBalance / cfg.EffectiveBalanceIncrement
 	baseRewardPerInc, err := BaseRewardPerIncrement(activeBalance)
 	if err != nil {
 		return 0, 0, err
 	}
+	totalActiveIncrements := new(big.Int).Div(activeBalance, new(big.Int).SetUint64(cfg.EffectiveBalanceIncrement)).Uint64()
 	totalBaseRewards := baseRewardPerInc * totalActiveIncrements
 	maxParticipantRewards := totalBaseRewards * cfg.SyncRewardWeight / cfg.WeightDenominator / uint64(cfg.SlotsPerEpoch)
 	participantReward = maxParticipantRewards / cfg.SyncCommitteeSize

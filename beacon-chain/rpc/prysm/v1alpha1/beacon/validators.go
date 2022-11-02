@@ -3,6 +3,7 @@ package beacon
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sort"
 	"strconv"
 
@@ -547,16 +548,16 @@ func (bs *Server) GetValidatorParticipation(
 		Finalized: requestedEpoch <= cp.Epoch,
 		Participation: &ethpb.ValidatorParticipation{
 			// TODO(7130): Remove these three deprecated fields.
-			GlobalParticipationRate:          float32(b.PrevEpochTargetAttested) / float32(b.ActivePrevEpoch),
-			VotedEther:                       b.PrevEpochTargetAttested,
-			EligibleEther:                    b.ActivePrevEpoch,
-			CurrentEpochActiveGwei:           b.ActiveCurrentEpoch,
-			CurrentEpochAttestingGwei:        b.CurrentEpochAttested,
-			CurrentEpochTargetAttestingGwei:  b.CurrentEpochTargetAttested,
-			PreviousEpochActiveGwei:          b.ActivePrevEpoch,
-			PreviousEpochAttestingGwei:       b.PrevEpochAttested,
-			PreviousEpochTargetAttestingGwei: b.PrevEpochTargetAttested,
-			PreviousEpochHeadAttestingGwei:   b.PrevEpochHeadAttested,
+			GlobalParticipationRate:          new(big.Int).Div(b.PrevEpochTargetAttested, b.ActivePrevEpoch).String(),
+			VotedEther:                       b.PrevEpochTargetAttested.String(),
+			EligibleEther:                    b.ActivePrevEpoch.String(),
+			CurrentEpochActiveGwei:           b.ActiveCurrentEpoch.String(),
+			CurrentEpochAttestingGwei:        b.CurrentEpochAttested.String(),
+			CurrentEpochTargetAttestingGwei:  b.CurrentEpochTargetAttested.String(),
+			PreviousEpochActiveGwei:          b.ActivePrevEpoch.String(),
+			PreviousEpochAttestingGwei:       b.PrevEpochAttested.String(),
+			PreviousEpochTargetAttestingGwei: b.PrevEpochTargetAttested.String(),
+			PreviousEpochHeadAttestingGwei:   b.PrevEpochHeadAttested.String(),
 		},
 	}
 

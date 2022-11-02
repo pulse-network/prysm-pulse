@@ -3,6 +3,7 @@ package doublylinkedtree
 import (
 	"bytes"
 	"context"
+	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v4/config/params"
@@ -23,7 +24,7 @@ const ProcessAttestationsThreshold = 10
 // using the current balance stored in each node.
 func (n *Node) applyWeightChanges(ctx context.Context) error {
 	// Recursively calling the children to sum their weights.
-	childrenWeight := uint64(0)
+	childrenWeight := big.NewInt(0)
 	for _, child := range n.children {
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -31,12 +32,12 @@ func (n *Node) applyWeightChanges(ctx context.Context) error {
 		if err := child.applyWeightChanges(ctx); err != nil {
 			return err
 		}
-		childrenWeight += child.weight
+		childrenWeight.Add(childrenWeight, child.weight)
 	}
 	if n.root == params.BeaconConfig().ZeroHash {
 		return nil
 	}
-	n.weight = n.balance + childrenWeight
+	n.weight = new(big.Int).Add(n.balance, childrenWeight)
 	return nil
 }
 
@@ -52,7 +53,7 @@ func (n *Node) updateBestDescendant(ctx context.Context, justifiedEpoch, finaliz
 	}
 
 	var bestChild *Node
-	bestWeight := uint64(0)
+	bestWeight := big.NewInt(0)
 	hasViableDescendant := false
 	for _, child := range n.children {
 		if child == nil {
@@ -70,12 +71,12 @@ func (n *Node) updateBestDescendant(ctx context.Context, justifiedEpoch, finaliz
 			hasViableDescendant = true
 		} else if childLeadsToViableHead {
 			// If both are viable, compare their weights.
-			if child.weight == bestWeight {
+			if child.weight.Cmp(bestWeight) == 0 {
 				// Tie-breaker of equal weights by root.
 				if bytes.Compare(child.root[:], bestChild.root[:]) > 0 {
 					bestChild = child
 				}
-			} else if child.weight > bestWeight {
+			} else if child.weight.Cmp(bestWeight) == 1 {
 				bestChild = child
 				bestWeight = child.weight
 			}
@@ -167,8 +168,8 @@ func (n *Node) nodeTreeDump(ctx context.Context, nodes []*v1.ForkChoiceNode) ([]
 		FinalizedEpoch:           n.finalizedEpoch,
 		UnrealizedJustifiedEpoch: n.unrealizedJustifiedEpoch,
 		UnrealizedFinalizedEpoch: n.unrealizedFinalizedEpoch,
-		Balance:                  n.balance,
-		Weight:                   n.weight,
+		Balance:                  n.balance.String(),
+		Weight:                   n.weight.String(),
 		ExecutionOptimistic:      n.optimistic,
 		ExecutionBlockHash:       n.payloadHash[:],
 		Timestamp:                n.timestamp,

@@ -3,6 +3,7 @@ package doublylinkedtree
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/pkg/errors"
@@ -31,6 +32,7 @@ func New() *ForkChoice {
 		prevJustifiedCheckpoint:       &forkchoicetypes.Checkpoint{},
 		finalizedCheckpoint:           &forkchoicetypes.Checkpoint{},
 		proposerBoostRoot:             [32]byte{},
+		committeeWeight:               big.NewInt(0),
 		nodeByRoot:                    make(map[[fieldparams.RootLength]byte]*Node),
 		nodeByPayload:                 make(map[[fieldparams.RootLength]byte]*Node),
 		slashedIndices:                make(map[primitives.ValidatorIndex]bool),
@@ -277,19 +279,19 @@ func (f *ForkChoice) updateBalances() error {
 			continue
 		}
 
-		oldBalance := uint64(0)
-		newBalance := uint64(0)
+		oldBalance := big.NewInt(0)
+		newBalance := big.NewInt(0)
 		// If the validator index did not exist in `f.balances` or
 		// `newBalances` list above, the balance is just 0.
 		if index < len(f.balances) {
-			oldBalance = f.balances[index]
+			oldBalance = new(big.Int).SetUint64(f.balances[index])
 		}
 		if index < len(newBalances) {
-			newBalance = newBalances[index]
+			newBalance = new(big.Int).SetUint64(newBalances[index])
 		}
 
 		// Update only if the validator's balance or vote has changed.
-		if vote.currentRoot != vote.nextRoot || oldBalance != newBalance {
+		if vote.currentRoot != vote.nextRoot || oldBalance.Cmp(newBalance) != 0 {
 			// Ignore the vote if the root is not in fork choice
 			// store, that means we have not seen the block before.
 			nextNode, ok := f.store.nodeByRoot[vote.nextRoot]
@@ -298,7 +300,7 @@ func (f *ForkChoice) updateBalances() error {
 				if nextNode == nil {
 					return errors.Wrap(ErrNilNode, "could not update balances")
 				}
-				nextNode.balance += newBalance
+				nextNode.balance.Add(nextNode.balance, newBalance)
 			}
 
 			currentNode, ok := f.store.nodeByRoot[vote.currentRoot]
@@ -307,7 +309,7 @@ func (f *ForkChoice) updateBalances() error {
 				if currentNode == nil {
 					return errors.Wrap(ErrNilNode, "could not update balances")
 				}
-				if currentNode.balance < oldBalance {
+				if currentNode.balance.Cmp(oldBalance) == -1 {
 					log.WithFields(logrus.Fields{
 						"nodeRoot":                   fmt.Sprintf("%#x", bytesutil.Trunc(vote.currentRoot[:])),
 						"oldBalance":                 oldBalance,
@@ -317,9 +319,9 @@ func (f *ForkChoice) updateBalances() error {
 						"previousProposerBoostRoot":  fmt.Sprintf("%#x", bytesutil.Trunc(f.store.previousProposerBoostRoot[:])),
 						"previousProposerBoostScore": f.store.previousProposerBoostScore,
 					}).Warning("node with invalid balance, setting it to zero")
-					currentNode.balance = 0
+					currentNode.balance = big.NewInt(0)
 				} else {
-					currentNode.balance -= oldBalance
+					currentNode.balance.Sub(currentNode.balance, oldBalance)
 				}
 			}
 		}
@@ -396,10 +398,10 @@ func (f *ForkChoice) InsertSlashedIndex(_ context.Context, index primitives.Vali
 		return
 	}
 
-	if node.balance < f.balances[index] {
-		node.balance = 0
+	if node.balance.Cmp(new(big.Int).SetUint64(f.balances[index])) == -1 {
+		node.balance = big.NewInt(0)
 	} else {
-		node.balance -= f.balances[index]
+		node.balance.Sub(node.balance, new(big.Int).SetUint64(f.balances[index]))
 	}
 }
 
@@ -601,10 +603,10 @@ func (f *ForkChoice) SetBalancesByRooter(handler forkchoice.BalancesByRooter) {
 }
 
 // Weight returns the weight of the given root if found on the store
-func (f *ForkChoice) Weight(root [32]byte) (uint64, error) {
+func (f *ForkChoice) Weight(root [32]byte) (*big.Int, error) {
 	n, ok := f.store.nodeByRoot[root]
 	if !ok || n == nil {
-		return 0, ErrNilNode
+		return big.NewInt(0), ErrNilNode
 	}
 	return n.weight, nil
 }
@@ -616,15 +618,15 @@ func (f *ForkChoice) updateJustifiedBalances(ctx context.Context, root [32]byte)
 		return errors.Wrap(err, "could not get justified balances")
 	}
 	f.justifiedBalances = balances
-	f.store.committeeWeight = 0
+	f.store.committeeWeight = big.NewInt(0)
 	f.numActiveValidators = 0
 	for _, val := range balances {
 		if val > 0 {
-			f.store.committeeWeight += val
+			f.store.committeeWeight.Add(f.store.committeeWeight, new(big.Int).SetUint64(val))
 			f.numActiveValidators++
 		}
 	}
-	f.store.committeeWeight /= uint64(params.BeaconConfig().SlotsPerEpoch)
+	f.store.committeeWeight.Div(f.store.committeeWeight, new(big.Int).SetUint64(uint64(params.BeaconConfig().SlotsPerEpoch)))
 	return nil
 }
 

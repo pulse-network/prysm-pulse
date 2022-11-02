@@ -2,6 +2,7 @@ package precompute
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -14,7 +15,6 @@ import (
 	fieldparams "github.com/prysmaticlabs/prysm/v4/config/fieldparams"
 	"github.com/prysmaticlabs/prysm/v4/config/params"
 	"github.com/prysmaticlabs/prysm/v4/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v4/math"
 	ethpb "github.com/prysmaticlabs/prysm/v4/proto/prysm/v1alpha1"
 	"github.com/prysmaticlabs/prysm/v4/runtime/version"
 	"github.com/prysmaticlabs/prysm/v4/testing/assert"
@@ -97,8 +97,10 @@ func TestAttestationDeltaPrecompute(t *testing.T) {
 
 	// Add some variances to target and head balances.
 	// See: https://github.com/prysmaticlabs/prysm/issues/5593
-	bp.PrevEpochTargetAttested /= 2
-	bp.PrevEpochHeadAttested = bp.PrevEpochHeadAttested * 2 / 3
+	bigTwo := big.NewInt(2)
+	bigThree := big.NewInt(3)
+	bp.PrevEpochTargetAttested = new(big.Int).Div(bp.PrevEpochTargetAttested, bigTwo)
+	bp.PrevEpochHeadAttested = new(big.Int).Div(new(big.Int).Mul(bp.PrevEpochHeadAttested, bigTwo), bigThree)
 	rewards, penalties, err := AttestationsDelta(beaconState, bp, vp)
 	require.NoError(t, err)
 	attestedBalance, err := epoch.AttestingBalance(context.Background(), beaconState, atts)
@@ -112,14 +114,23 @@ func TestAttestationDeltaPrecompute(t *testing.T) {
 		require.NoError(t, err, "Could not get base reward")
 
 		// Base rewards for getting source right
-		wanted := attestedBalance*base/totalBalance +
-			bp.PrevEpochTargetAttested*base/totalBalance +
-			bp.PrevEpochHeadAttested*base/totalBalance
+		baseBig := new(big.Int).SetUint64(base)
+		attestedBalanceTimesBase := new(big.Int).Mul(attestedBalance, baseBig)
+		prevEpochTargetAttestedTimesBase := new(big.Int).Mul(bp.PrevEpochTargetAttested, baseBig)
+		prevEpochHeadAttestedTimesBase := new(big.Int).Mul(bp.PrevEpochHeadAttested, baseBig)
+
+		attestedBalanceTimesBaseDivTotalBal := new(big.Int).Div(attestedBalanceTimesBase, totalBalance)
+		prevEpochTargetAttestedTimesBaseDivTotalBal := new(big.Int).Div(prevEpochTargetAttestedTimesBase, totalBalance)
+		prevEpochHeadAttestedTimesBaseDivTotalBal := new(big.Int).Div(prevEpochHeadAttestedTimesBase, totalBalance)
+		wanted := new(big.Int).Add(new(big.Int).Add(attestedBalanceTimesBaseDivTotalBal, prevEpochTargetAttestedTimesBaseDivTotalBal), prevEpochHeadAttestedTimesBaseDivTotalBal)
 		// Base rewards for proposer and attesters working together getting attestation
 		// on chain in the fatest manner
 		proposerReward := base / params.BeaconConfig().ProposerRewardQuotient
-		wanted += (base-proposerReward)*uint64(params.BeaconConfig().MinAttestationInclusionDelay) - 1
-		assert.Equal(t, wanted, rewards[i], "Unexpected reward balance for validator with index %d", i)
+		baseSubProposerReward := new(big.Int).Sub(baseBig, new(big.Int).SetUint64(proposerReward))
+		baseSubProposerRewardTimesMinAttestIncDelay := new(big.Int).Mul(baseSubProposerReward, new(big.Int).SetUint64(uint64(params.BeaconConfig().MinAttestationInclusionDelay)))
+		baseSubProposerRewardTimesMinAttestIncDelaySubOne := new(big.Int).Sub(baseSubProposerRewardTimesMinAttestIncDelay, big.NewInt(1))
+		wanted.Add(wanted, baseSubProposerRewardTimesMinAttestIncDelaySubOne)
+		assert.Equal(t, wanted.Uint64(), rewards[i], "Unexpected reward balance for validator with index %d", i)
 		// Since all these validators attested, they shouldn't get penalized.
 		assert.Equal(t, uint64(0), penalties[i], "Unexpected penalty balance")
 	}
@@ -173,7 +184,7 @@ func TestAttestationDeltas_ZeroEpoch(t *testing.T) {
 	pVals, pBal, err = ProcessAttestations(context.Background(), beaconState, pVals, pBal)
 	require.NoError(t, err)
 
-	pBal.ActiveCurrentEpoch = 0 // Could cause a divide by zero panic.
+	pBal.ActiveCurrentEpoch = big.NewInt(0) // Could cause a divide by zero panic.
 
 	_, _, err = AttestationsDelta(beaconState, pBal, pVals)
 	require.NoError(t, err)
@@ -307,18 +318,21 @@ func TestProposerDeltaPrecompute_HappyCase(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerIndex := primitives.ValidatorIndex(1)
-	b := &Balance{ActiveCurrentEpoch: 1000}
+	b := &Balance{ActiveCurrentEpoch: big.NewInt(1000)}
 	v := []*Validator{
 		{IsPrevEpochAttester: true, CurrentEpochEffectiveBalance: 32, ProposerIndex: proposerIndex},
 	}
 	r, err := ProposersDelta(beaconState, b, v)
 	require.NoError(t, err)
 
-	baseReward := v[0].CurrentEpochEffectiveBalance * params.BeaconConfig().BaseRewardFactor /
-		math.IntegerSquareRoot(b.ActiveCurrentEpoch) / params.BeaconConfig().BaseRewardsPerEpoch
-	proposerReward := baseReward / params.BeaconConfig().ProposerRewardQuotient
+	activeCurrEpochSqrt := new(big.Int).Sqrt(b.ActiveCurrentEpoch)
+	currEpochEffectBal := new(big.Int).SetUint64(v[0].CurrentEpochEffectiveBalance)
+	currEpochEffBalTimesBrFact := new(big.Int).Mul(currEpochEffectBal, new(big.Int).SetUint64(params.BeaconConfig().BaseRewardFactor))
+	currEpochEffBalTimesBrFactDivSqrt := new(big.Int).Div(currEpochEffBalTimesBrFact, activeCurrEpochSqrt)
+	baseReward := new(big.Int).Div(currEpochEffBalTimesBrFactDivSqrt, new(big.Int).SetUint64(params.BeaconConfig().BaseRewardsPerEpoch))
+	proposerReward := new(big.Int).Div(baseReward, new(big.Int).SetUint64(params.BeaconConfig().ProposerRewardQuotient))
 
-	assert.Equal(t, proposerReward, r[proposerIndex], "Unexpected proposer reward")
+	assert.Equal(t, proposerReward.Uint64(), r[proposerIndex], "Unexpected proposer reward")
 }
 
 func TestProposerDeltaPrecompute_ValidatorIndexOutOfRange(t *testing.T) {
@@ -329,7 +343,7 @@ func TestProposerDeltaPrecompute_ValidatorIndexOutOfRange(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerIndex := primitives.ValidatorIndex(validatorCount)
-	b := &Balance{ActiveCurrentEpoch: 1000}
+	b := &Balance{ActiveCurrentEpoch: big.NewInt(1000)}
 	v := []*Validator{
 		{IsPrevEpochAttester: true, CurrentEpochEffectiveBalance: 32, ProposerIndex: proposerIndex},
 	}
@@ -345,7 +359,7 @@ func TestProposerDeltaPrecompute_SlashedCase(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerIndex := primitives.ValidatorIndex(1)
-	b := &Balance{ActiveCurrentEpoch: 1000}
+	b := &Balance{ActiveCurrentEpoch: big.NewInt(1000)}
 	v := []*Validator{
 		{IsPrevEpochAttester: true, CurrentEpochEffectiveBalance: 32, ProposerIndex: proposerIndex, IsSlashed: true},
 	}
@@ -373,7 +387,8 @@ func baseReward(state state.ReadOnlyBeaconState, index primitives.ValidatorIndex
 		return 0, err
 	}
 	effectiveBalance := val.EffectiveBalance()
+	totalBalanceSqrt := new(big.Int).Sqrt(totalBalance).Uint64()
 	baseReward := effectiveBalance * params.BeaconConfig().BaseRewardFactor /
-		math.IntegerSquareRoot(totalBalance) / params.BeaconConfig().BaseRewardsPerEpoch
+		totalBalanceSqrt / params.BeaconConfig().BaseRewardsPerEpoch
 	return baseReward, nil
 }

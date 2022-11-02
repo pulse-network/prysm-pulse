@@ -146,7 +146,7 @@ func TestAttestingBalance_CorrectBalance(t *testing.T) {
 	balance, err := epoch.AttestingBalance(context.Background(), beaconState, atts)
 	require.NoError(t, err)
 	wanted := 256 * params.BeaconConfig().MaxEffectiveBalance
-	assert.Equal(t, wanted, balance)
+	assert.Equal(t, wanted, balance.Uint64())
 }
 
 func TestProcessSlashings_NotSlashed(t *testing.T) {

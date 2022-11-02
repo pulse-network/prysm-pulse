@@ -5,6 +5,7 @@ package state
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/prysmaticlabs/go-bitfield"
 	fieldparams "github.com/prysmaticlabs/prysm/v4/config/fieldparams"
@@ -137,7 +138,7 @@ type ReadOnlyCheckpoint interface {
 	FinalizedCheckpoint() *ethpb.Checkpoint
 	FinalizedCheckpointEpoch() primitives.Epoch
 	JustificationBits() bitfield.Bitvector4
-	UnrealizedCheckpointBalances() (uint64, uint64, uint64, error)
+	UnrealizedCheckpointBalances() (*big.Int, *big.Int, *big.Int, error)
 }
 
 // ReadOnlyBlockRoots defines a struct which only has read access to block roots methods.
