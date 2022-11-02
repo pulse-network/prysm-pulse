@@ -5,6 +5,7 @@ package state
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/prysmaticlabs/go-bitfield"
 	fieldparams "github.com/prysmaticlabs/prysm/v3/config/fieldparams"
@@ -238,7 +239,7 @@ type FutureForkStub interface {
 	AppendInactivityScore(s uint64) error
 	CurrentEpochParticipation() ([]byte, error)
 	PreviousEpochParticipation() ([]byte, error)
-	UnrealizedCheckpointBalances() (uint64, uint64, uint64, error)
+	UnrealizedCheckpointBalances() (*big.Int, *big.Int, *big.Int, error)
 	InactivityScores() ([]uint64, error)
 	SetInactivityScores(val []uint64) error
 	CurrentSyncCommittee() (*ethpb.SyncCommittee, error)

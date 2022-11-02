@@ -1,6 +1,8 @@
 package precompute
 
 import (
+	"math/big"
+
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/helpers"
@@ -16,20 +18,20 @@ var errNilState = errors.New("nil state")
 // UnrealizedCheckpoints returns the justification and finalization checkpoints of the
 // given state as if it was progressed with empty slots until the next epoch. It
 // also returns the total active balance during the epoch.
-func UnrealizedCheckpoints(st state.BeaconState) (uint64, *ethpb.Checkpoint, *ethpb.Checkpoint, error) {
+func UnrealizedCheckpoints(st state.BeaconState) (*big.Int, *ethpb.Checkpoint, *ethpb.Checkpoint, error) {
 	if st == nil || st.IsNil() {
-		return 0, nil, nil, errNilState
+		return big.NewInt(0), nil, nil, errNilState
 	}
 
 	if slots.ToEpoch(st.Slot()) <= params.BeaconConfig().GenesisEpoch+1 {
 		jc := st.CurrentJustifiedCheckpoint()
 		fc := st.FinalizedCheckpoint()
-		return 0, jc, fc, nil
+		return big.NewInt(0), jc, fc, nil
 	}
 
 	activeBalance, prevTarget, currentTarget, err := st.UnrealizedCheckpointBalances()
 	if err != nil {
-		return 0, nil, nil, err
+		return big.NewInt(0), nil, nil, err
 	}
 
 	justification := processJustificationBits(st, activeBalance, prevTarget, currentTarget)
@@ -69,15 +71,18 @@ func ProcessJustificationAndFinalizationPreCompute(state state.BeaconState, pBal
 }
 
 // processJustificationBits processes the justification bits during epoch processing.
-func processJustificationBits(state state.BeaconState, totalActiveBalance, prevEpochTargetBalance, currEpochTargetBalance uint64) bitfield.Bitvector4 {
+func processJustificationBits(state state.BeaconState, totalActiveBalance, prevEpochTargetBalance, currEpochTargetBalance *big.Int) bitfield.Bitvector4 {
 	newBits := state.JustificationBits()
 	newBits.Shift(1)
 	// If 2/3 or more of total balance attested in the previous epoch.
-	if 3*prevEpochTargetBalance >= 2*totalActiveBalance {
+	prevEpochTargetBalanceTimesThree := big.NewInt(0).Mul(big.NewInt(3), prevEpochTargetBalance)
+	currEpochTargetBalanceTimesThree := big.NewInt(0).Mul(big.NewInt(3), currEpochTargetBalance)
+	totalActiveBalanceTimesTwo := big.NewInt(0).Mul(big.NewInt(2), totalActiveBalance)
+	if prevEpochTargetBalanceTimesThree.Cmp(totalActiveBalanceTimesTwo) != -1 {
 		newBits.SetBitAt(1, true)
 	}
 
-	if 3*currEpochTargetBalance >= 2*totalActiveBalance {
+	if currEpochTargetBalanceTimesThree.Cmp(totalActiveBalanceTimesTwo) != -1 {
 		newBits.SetBitAt(0, true)
 	}
 

@@ -512,9 +512,10 @@ func TestSetParticipationAndRewardProposer(t *testing.T) {
 
 			i, err := helpers.BeaconProposerIndex(context.Background(), st)
 			require.NoError(t, err)
-			b, err = beaconState.BalanceAtIndex(i)
+			var bal uint64
+			bal, err = beaconState.BalanceAtIndex(i)
 			require.NoError(t, err)
-			require.Equal(t, test.wantedBalance, b)
+			require.Equal(t, test.wantedBalance, bal)
 
 			if test.epoch == currentEpoch {
 				p, err := beaconState.CurrentEpochParticipation()

@@ -3,6 +3,7 @@ package precompute
 import (
 	"bytes"
 	"context"
+	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/helpers"
@@ -174,23 +175,24 @@ func UpdateValidator(vp []*Validator, record *Validator, indices []uint64, a *et
 func UpdateBalance(vp []*Validator, bBal *Balance, stateVersion int) *Balance {
 	for _, v := range vp {
 		if !v.IsSlashed {
+			currentEpochEffectiveBalance := new(big.Int).SetUint64(v.CurrentEpochEffectiveBalance)
 			if v.IsCurrentEpochAttester {
-				bBal.CurrentEpochAttested += v.CurrentEpochEffectiveBalance
+				bBal.CurrentEpochAttested = new(big.Int).Add(bBal.CurrentEpochAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsCurrentEpochTargetAttester {
-				bBal.CurrentEpochTargetAttested += v.CurrentEpochEffectiveBalance
+				bBal.CurrentEpochTargetAttested = new(big.Int).Add(bBal.CurrentEpochTargetAttested, currentEpochEffectiveBalance)
 			}
 			if stateVersion == version.Phase0 && v.IsPrevEpochAttester {
-				bBal.PrevEpochAttested += v.CurrentEpochEffectiveBalance
+				bBal.PrevEpochAttested = new(big.Int).Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
 			}
 			if stateVersion >= version.Altair && v.IsPrevEpochSourceAttester {
-				bBal.PrevEpochAttested += v.CurrentEpochEffectiveBalance
+				bBal.PrevEpochAttested = new(big.Int).Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsPrevEpochTargetAttester {
-				bBal.PrevEpochTargetAttested += v.CurrentEpochEffectiveBalance
+				bBal.PrevEpochTargetAttested = new(big.Int).Add(bBal.PrevEpochTargetAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsPrevEpochHeadAttester {
-				bBal.PrevEpochHeadAttested += v.CurrentEpochEffectiveBalance
+				bBal.PrevEpochHeadAttested = new(big.Int).Add(bBal.PrevEpochHeadAttested, currentEpochEffectiveBalance)
 			}
 		}
 	}
@@ -202,26 +204,27 @@ func UpdateBalance(vp []*Validator, bBal *Balance, stateVersion int) *Balance {
 // have EffectiveBalanceIncrement(1 eth) as a lower bound.
 func EnsureBalancesLowerBound(bBal *Balance) *Balance {
 	ebi := params.BeaconConfig().EffectiveBalanceIncrement
-	if ebi > bBal.ActiveCurrentEpoch {
-		bBal.ActiveCurrentEpoch = ebi
+	ebiBig := new(big.Int).SetUint64(ebi)
+	if ebiBig.Cmp(bBal.ActiveCurrentEpoch) == 1 {
+		bBal.ActiveCurrentEpoch = ebiBig
 	}
-	if ebi > bBal.ActivePrevEpoch {
-		bBal.ActivePrevEpoch = ebi
+	if ebiBig.Cmp(bBal.ActivePrevEpoch) == 1 {
+		bBal.ActivePrevEpoch = ebiBig
 	}
-	if ebi > bBal.CurrentEpochAttested {
-		bBal.CurrentEpochAttested = ebi
+	if ebiBig.Cmp(bBal.CurrentEpochAttested) == 1 {
+		bBal.CurrentEpochAttested = ebiBig
 	}
-	if ebi > bBal.CurrentEpochTargetAttested {
-		bBal.CurrentEpochTargetAttested = ebi
+	if ebiBig.Cmp(bBal.CurrentEpochTargetAttested) == 1 {
+		bBal.CurrentEpochTargetAttested = ebiBig
 	}
-	if ebi > bBal.PrevEpochAttested {
-		bBal.PrevEpochAttested = ebi
+	if ebiBig.Cmp(bBal.PrevEpochAttested) == 1 {
+		bBal.PrevEpochAttested = ebiBig
 	}
-	if ebi > bBal.PrevEpochTargetAttested {
-		bBal.PrevEpochTargetAttested = ebi
+	if ebiBig.Cmp(bBal.PrevEpochTargetAttested) == 1 {
+		bBal.PrevEpochTargetAttested = ebiBig
 	}
-	if ebi > bBal.PrevEpochHeadAttested {
-		bBal.PrevEpochHeadAttested = ebi
+	if ebiBig.Cmp(bBal.PrevEpochHeadAttested) == 1 {
+		bBal.PrevEpochHeadAttested = ebiBig
 	}
 	return bBal
 }

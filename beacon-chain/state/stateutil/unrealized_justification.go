@@ -1,10 +1,11 @@
 package stateutil
 
 import (
+	"math/big"
+
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v3/config/params"
 	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v3/math"
 	ethpb "github.com/prysmaticlabs/prysm/v3/proto/prysm/v1alpha1"
 )
 
@@ -13,34 +14,27 @@ import (
 // current epoch correctly attested for target balance. It takes the current and
 // previous epoch participation bits as parameters so implicitly only works for
 // beacon states post-Altair.
-func UnrealizedCheckpointBalances(cp, pp []byte, validators []*ethpb.Validator, currentEpoch types.Epoch) (uint64, uint64, uint64, error) {
+func UnrealizedCheckpointBalances(cp, pp []byte, validators []*ethpb.Validator, currentEpoch types.Epoch) (*big.Int, *big.Int, *big.Int, error) {
 	targetIdx := params.BeaconConfig().TimelyTargetFlagIndex
-	activeBalance := uint64(0)
-	currentTarget := uint64(0)
-	prevTarget := uint64(0)
+	activeBalance := big.NewInt(0)
+	currentTarget := big.NewInt(0)
+	prevTarget := big.NewInt(0)
 	if len(cp) < len(validators) || len(pp) < len(validators) {
-		return 0, 0, 0, errors.New("participation does not match validator set")
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), errors.New("participation does not match validator set")
 	}
 
-	var err error
 	for i, v := range validators {
 		active := v.ActivationEpoch <= currentEpoch && currentEpoch < v.ExitEpoch
 		if active && !v.Slashed {
-			activeBalance, err = math.Add64(activeBalance, v.EffectiveBalance)
-			if err != nil {
-				return 0, 0, 0, err
-			}
+			effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
+			activeBalance.Add(activeBalance, effectiveBalanceBig)
 			if ((cp[i] >> targetIdx) & 1) == 1 {
-				currentTarget, err = math.Add64(currentTarget, v.EffectiveBalance)
-				if err != nil {
-					return 0, 0, 0, err
-				}
+				effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
+				currentTarget.Add(currentTarget, effectiveBalanceBig)
 			}
 			if ((pp[i] >> targetIdx) & 1) == 1 {
-				prevTarget, err = math.Add64(prevTarget, v.EffectiveBalance)
-				if err != nil {
-					return 0, 0, 0, err
-				}
+				effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
+				prevTarget.Add(prevTarget, effectiveBalanceBig)
 			}
 		}
 	}

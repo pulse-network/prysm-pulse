@@ -314,9 +314,9 @@ func (v *validator) logForEachValidator(index int, pubKey []byte, resp *ethpb.Va
 			"correctlyVotedSource":    correctlyVotedSource,
 			"correctlyVotedTarget":    correctlyVotedTarget,
 			"correctlyVotedHead":      correctlyVotedHead,
-			"startBalance":            startBalance,
-			"oldBalance":              prevBalance,
-			"newBalance":              newBalance,
+			"startBalance":            fmt.Sprintf("%f", startBalance),
+			"oldBalance":              fmt.Sprintf("%f", prevBalance),
+			"newBalance":              fmt.Sprintf("%f", newBalance),
 			"percentChange":           fmt.Sprintf("%.5f%%", percentNet*100),
 			"percentChangeSinceStart": fmt.Sprintf("%.5f%%", percentSinceStart*100),
 		}

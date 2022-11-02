@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/blocks"
@@ -49,7 +50,7 @@ func ProcessAttestationNoVerifySignature(
 	ctx context.Context,
 	beaconState state.BeaconState,
 	att *ethpb.Attestation,
-	totalBalance uint64,
+	totalBalance *big.Int,
 ) (state.BeaconState, error) {
 	ctx, span := trace.StartSpan(ctx, "altair.ProcessAttestationNoVerifySignature")
 	defer span.End()
@@ -105,7 +106,7 @@ func SetParticipationAndRewardProposer(
 	beaconState state.BeaconState,
 	targetEpoch types.Epoch,
 	indices []uint64,
-	participatedFlags map[uint8]bool, totalBalance uint64) (state.BeaconState, error) {
+	participatedFlags map[uint8]bool, totalBalance *big.Int) (state.BeaconState, error) {
 	var proposerRewardNumerator uint64
 	currentEpoch := time.CurrentEpoch(beaconState)
 	var stateErr error
@@ -165,7 +166,7 @@ func AddValidatorFlag(flag, flagPosition uint8) (uint8, error) {
 //	        if flag_index in participation_flag_indices and not has_flag(epoch_participation[index], flag_index):
 //	            epoch_participation[index] = add_flag(epoch_participation[index], flag_index)
 //	            proposer_reward_numerator += get_base_reward(state, index) * weight
-func EpochParticipation(beaconState state.BeaconState, indices []uint64, epochParticipation []byte, participatedFlags map[uint8]bool, totalBalance uint64) (uint64, []byte, error) {
+func EpochParticipation(beaconState state.BeaconState, indices []uint64, epochParticipation []byte, participatedFlags map[uint8]bool, totalBalance *big.Int) (uint64, []byte, error) {
 	cfg := params.BeaconConfig()
 	sourceFlagIndex := cfg.TimelySourceFlagIndex
 	targetFlagIndex := cfg.TimelyTargetFlagIndex

@@ -2,6 +2,7 @@ package forkchoice
 
 import (
 	"context"
+	"math/big"
 
 	forkchoicetypes "github.com/prysmaticlabs/prysm/v3/beacon-chain/forkchoice/types"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/state"
@@ -69,7 +70,7 @@ type Getter interface {
 	HighestReceivedBlockRoot() [32]byte
 	ReceivedBlocksLastEpoch() (uint64, error)
 	ForkChoiceDump(context.Context) (*v1.ForkChoiceDump, error)
-	VotedFraction(root [32]byte) (uint64, error)
+	VotedFraction(root [32]byte) (*big.Int, error)
 }
 
 // Setter allows to set forkchoice information
