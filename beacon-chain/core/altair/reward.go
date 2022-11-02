@@ -1,12 +1,13 @@
 package altair
 
 import (
+	"math/big"
+
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/state"
 	"github.com/prysmaticlabs/prysm/v4/config/params"
 	"github.com/prysmaticlabs/prysm/v4/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v4/math"
 )
 
 // BaseReward takes state and validator index and calculate
@@ -33,7 +34,7 @@ func BaseReward(s state.ReadOnlyBeaconState, index primitives.ValidatorIndex) (u
 }
 
 // BaseRewardWithTotalBalance calculates the base reward with the provided total balance.
-func BaseRewardWithTotalBalance(s state.ReadOnlyBeaconState, index primitives.ValidatorIndex, totalBalance uint64) (uint64, error) {
+func BaseRewardWithTotalBalance(s state.ReadOnlyBeaconState, index primitives.ValidatorIndex, totalBalance *big.Int) (uint64, error) {
 	val, err := s.ValidatorAtIndexReadOnly(index)
 	if err != nil {
 		return 0, err
@@ -53,10 +54,11 @@ func BaseRewardWithTotalBalance(s state.ReadOnlyBeaconState, index primitives.Va
 // def get_base_reward_per_increment(state: BeaconState) -> Gwei:
 //
 //	return Gwei(EFFECTIVE_BALANCE_INCREMENT * BASE_REWARD_FACTOR // integer_squareroot(get_total_active_balance(state)))
-func BaseRewardPerIncrement(activeBalance uint64) (uint64, error) {
-	if activeBalance == 0 {
+func BaseRewardPerIncrement(activeBalance *big.Int) (uint64, error) {
+	if activeBalance.Cmp(big.NewInt(0)) == 0 {
 		return 0, errors.New("active balance can't be 0")
 	}
 	cfg := params.BeaconConfig()
-	return cfg.EffectiveBalanceIncrement * cfg.BaseRewardFactor / math.CachedSquareRoot(activeBalance), nil
+	activeBalanceSqrt := new(big.Int).Sqrt(activeBalance).Uint64()
+	return cfg.EffectiveBalanceIncrement * cfg.BaseRewardFactor / activeBalanceSqrt, nil
 }

@@ -1,12 +1,13 @@
 package precompute
 
 import (
+	"math/big"
+
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/time"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/state"
 	"github.com/prysmaticlabs/prysm/v4/config/params"
 	"github.com/prysmaticlabs/prysm/v4/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v4/math"
 	ethpb "github.com/prysmaticlabs/prysm/v4/proto/prysm/v1alpha1"
 )
 
@@ -23,7 +24,14 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 		totalSlashing += slashing
 	}
 
-	minSlashing := math.Min(totalSlashing*params.BeaconConfig().ProportionalSlashingMultiplier, pBal.ActiveCurrentEpoch)
+	var minSlashing *big.Int = big.NewInt(0)
+	totalSlashingTimesPropSlashMul := new(big.Int).SetUint64(totalSlashing * params.BeaconConfig().ProportionalSlashingMultiplier)
+
+	if totalSlashingTimesPropSlashMul.Cmp(pBal.ActiveCurrentEpoch) == -1 {
+		minSlashing = totalSlashingTimesPropSlashMul
+	} else {
+		minSlashing = pBal.ActiveCurrentEpoch
+	}
 	epochToWithdraw := currentEpoch + exitLength/2
 
 	var hasSlashing bool
@@ -43,12 +51,13 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 		return nil
 	}
 
-	increment := params.BeaconConfig().EffectiveBalanceIncrement
+	increment := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	validatorFunc := func(idx int, val *ethpb.Validator) (bool, *ethpb.Validator, error) {
 		correctEpoch := epochToWithdraw == val.WithdrawableEpoch
 		if val.Slashed && correctEpoch {
-			penaltyNumerator := val.EffectiveBalance / increment * minSlashing
-			penalty := penaltyNumerator / pBal.ActiveCurrentEpoch * increment
+			valEffectiveBal := new(big.Int).SetUint64(val.EffectiveBalance)
+			penaltyNumerator := new(big.Int).Mul(new(big.Int).Div(valEffectiveBal, increment), minSlashing)
+			penalty := new(big.Int).Mul(new(big.Int).Div(penaltyNumerator, pBal.ActiveCurrentEpoch), increment).Uint64()
 			if err := helpers.DecreaseBalance(s, primitives.ValidatorIndex(idx), penalty); err != nil {
 				return false, val, err
 			}

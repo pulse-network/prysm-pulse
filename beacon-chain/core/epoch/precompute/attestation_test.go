@@ -2,6 +2,7 @@ package precompute_test
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	"github.com/prysmaticlabs/go-bitfield"
@@ -47,6 +48,10 @@ func TestUpdateValidator_InclusionOnlyCountsPrevEpoch(t *testing.T) {
 }
 
 func TestUpdateBalance(t *testing.T) {
+	ebi := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	ebiTimesHundred := big.NewInt(100).Mul(big.NewInt(100), ebi)
+	ebiTimesTwoHundred := big.NewInt(200).Mul(big.NewInt(200), ebi)
+	ebiTimesThreeHundred := big.NewInt(300).Mul(big.NewInt(300), ebi)
 	vp := []*precompute.Validator{
 		{IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
 		{IsCurrentEpochTargetAttester: true, IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
@@ -58,19 +63,31 @@ func TestUpdateBalance(t *testing.T) {
 		{IsSlashed: true, IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
 	}
 	wantedPBal := &precompute.Balance{
-		ActiveCurrentEpoch:         params.BeaconConfig().EffectiveBalanceIncrement,
-		ActivePrevEpoch:            params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochAttested:       200 * params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochTargetAttested: 200 * params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochAttested:          300 * params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochTargetAttested:    100 * params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochHeadAttested:      200 * params.BeaconConfig().EffectiveBalanceIncrement,
+		ActiveCurrentEpoch:         ebi,
+		ActivePrevEpoch:            ebi,
+		CurrentEpochAttested:       ebiTimesTwoHundred,
+		CurrentEpochTargetAttested: ebiTimesTwoHundred,
+		PrevEpochAttested:          ebiTimesThreeHundred,
+		PrevEpochTargetAttested:    ebiTimesHundred,
+		PrevEpochHeadAttested:      ebiTimesTwoHundred,
 	}
-	pBal := precompute.UpdateBalance(vp, &precompute.Balance{}, version.Phase0)
+	pBal := &precompute.Balance{
+		ActiveCurrentEpoch:         big.NewInt(0),
+		ActivePrevEpoch:            big.NewInt(0),
+		CurrentEpochAttested:       big.NewInt(0),
+		CurrentEpochTargetAttested: big.NewInt(0),
+		PrevEpochAttested:          big.NewInt(0),
+		PrevEpochHeadAttested:      big.NewInt(0),
+		PrevEpochTargetAttested:    big.NewInt(0),
+	}
+	pBal = precompute.UpdateBalance(vp, pBal, version.Phase0)
 	assert.DeepEqual(t, wantedPBal, pBal, "Incorrect balance calculations")
 }
 
 func TestUpdateBalanceDifferentVersions(t *testing.T) {
+	ebi := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	ebiTimesHundred := big.NewInt(100).Mul(big.NewInt(100), ebi)
+	ebiTimesTwoHundred := big.NewInt(200).Mul(big.NewInt(200), ebi)
 	vp := []*precompute.Validator{
 		{IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
 		{IsCurrentEpochTargetAttester: true, IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
@@ -82,15 +99,24 @@ func TestUpdateBalanceDifferentVersions(t *testing.T) {
 		{IsSlashed: true, IsCurrentEpochAttester: true, CurrentEpochEffectiveBalance: 100 * params.BeaconConfig().EffectiveBalanceIncrement},
 	}
 	wantedPBal := &precompute.Balance{
-		ActiveCurrentEpoch:         params.BeaconConfig().EffectiveBalanceIncrement,
-		ActivePrevEpoch:            params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochAttested:       200 * params.BeaconConfig().EffectiveBalanceIncrement,
-		CurrentEpochTargetAttested: 200 * params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochAttested:          params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochTargetAttested:    100 * params.BeaconConfig().EffectiveBalanceIncrement,
-		PrevEpochHeadAttested:      200 * params.BeaconConfig().EffectiveBalanceIncrement,
+		ActiveCurrentEpoch:         ebi,
+		ActivePrevEpoch:            ebi,
+		CurrentEpochAttested:       ebiTimesTwoHundred,
+		CurrentEpochTargetAttested: ebiTimesTwoHundred,
+		PrevEpochAttested:          ebi,
+		PrevEpochTargetAttested:    ebiTimesHundred,
+		PrevEpochHeadAttested:      ebiTimesTwoHundred,
 	}
-	pBal := precompute.UpdateBalance(vp, &precompute.Balance{}, version.Bellatrix)
+	pBal := &precompute.Balance{
+		ActiveCurrentEpoch:         big.NewInt(0),
+		ActivePrevEpoch:            big.NewInt(0),
+		CurrentEpochAttested:       big.NewInt(0),
+		CurrentEpochTargetAttested: big.NewInt(0),
+		PrevEpochAttested:          big.NewInt(0),
+		PrevEpochHeadAttested:      big.NewInt(0),
+		PrevEpochTargetAttested:    big.NewInt(0),
+	}
+	pBal = precompute.UpdateBalance(vp, pBal, version.Bellatrix)
 	assert.DeepEqual(t, wantedPBal, pBal, "Incorrect balance calculations")
 
 	pBal = precompute.UpdateBalance(vp, &precompute.Balance{}, version.Capella)
@@ -178,6 +204,15 @@ func TestProcessAttestations(t *testing.T) {
 	params.OverrideBeaconConfig(params.MinimalSpecConfig())
 
 	validators := uint64(128)
+	pBal := &precompute.Balance{
+		ActiveCurrentEpoch:         big.NewInt(0),
+		ActivePrevEpoch:            big.NewInt(0),
+		CurrentEpochAttested:       big.NewInt(0),
+		CurrentEpochTargetAttested: big.NewInt(0),
+		PrevEpochAttested:          big.NewInt(0),
+		PrevEpochHeadAttested:      big.NewInt(0),
+		PrevEpochTargetAttested:    big.NewInt(0),
+	}
 	beaconState, _ := util.DeterministicGenesisState(t, validators)
 	require.NoError(t, beaconState.SetSlot(params.BeaconConfig().SlotsPerEpoch))
 	c := helpers.SlotCommitteeCount(validators)
@@ -206,7 +241,7 @@ func TestProcessAttestations(t *testing.T) {
 	for i := 0; i < len(pVals); i++ {
 		pVals[i] = &precompute.Validator{CurrentEpochEffectiveBalance: 100}
 	}
-	pVals, _, err = precompute.ProcessAttestations(context.Background(), beaconState, pVals, &precompute.Balance{})
+	pVals, _, err = precompute.ProcessAttestations(context.Background(), beaconState, pVals, pBal)
 	require.NoError(t, err)
 
 	committee, err := helpers.BeaconCommitteeFromState(context.Background(), beaconState, att1.Data.Slot, att1.Data.CommitteeIndex)
@@ -230,14 +265,22 @@ func TestProcessAttestations(t *testing.T) {
 }
 
 func TestEnsureBalancesLowerBound(t *testing.T) {
-	b := &precompute.Balance{}
+	b := &precompute.Balance{
+		ActiveCurrentEpoch:         big.NewInt(0),
+		ActivePrevEpoch:            big.NewInt(0),
+		CurrentEpochAttested:       big.NewInt(0),
+		CurrentEpochTargetAttested: big.NewInt(0),
+		PrevEpochAttested:          big.NewInt(0),
+		PrevEpochHeadAttested:      big.NewInt(0),
+		PrevEpochTargetAttested:    big.NewInt(0),
+	}
 	b = precompute.EnsureBalancesLowerBound(b)
 	balanceIncrement := params.BeaconConfig().EffectiveBalanceIncrement
-	assert.Equal(t, balanceIncrement, b.ActiveCurrentEpoch, "Did not get wanted active current balance")
-	assert.Equal(t, balanceIncrement, b.ActivePrevEpoch, "Did not get wanted active previous balance")
-	assert.Equal(t, balanceIncrement, b.CurrentEpochAttested, "Did not get wanted current attested balance")
-	assert.Equal(t, balanceIncrement, b.CurrentEpochTargetAttested, "Did not get wanted target attested balance")
-	assert.Equal(t, balanceIncrement, b.PrevEpochAttested, "Did not get wanted prev attested balance")
-	assert.Equal(t, balanceIncrement, b.PrevEpochTargetAttested, "Did not get wanted prev target attested balance")
-	assert.Equal(t, balanceIncrement, b.PrevEpochHeadAttested, "Did not get wanted prev head attested balance")
+	assert.Equal(t, balanceIncrement, b.ActiveCurrentEpoch.Uint64(), "Did not get wanted active current balance")
+	assert.Equal(t, balanceIncrement, b.ActivePrevEpoch.Uint64(), "Did not get wanted active previous balance")
+	assert.Equal(t, balanceIncrement, b.CurrentEpochAttested.Uint64(), "Did not get wanted current attested balance")
+	assert.Equal(t, balanceIncrement, b.CurrentEpochTargetAttested.Uint64(), "Did not get wanted target attested balance")
+	assert.Equal(t, balanceIncrement, b.PrevEpochAttested.Uint64(), "Did not get wanted prev attested balance")
+	assert.Equal(t, balanceIncrement, b.PrevEpochTargetAttested.Uint64(), "Did not get wanted prev target attested balance")
+	assert.Equal(t, balanceIncrement, b.PrevEpochHeadAttested.Uint64(), "Did not get wanted prev head attested balance")
 }

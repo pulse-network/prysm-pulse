@@ -2,6 +2,7 @@ package forkchoice
 
 import (
 	"context"
+	"math/big"
 
 	forkchoicetypes "github.com/prysmaticlabs/prysm/v4/beacon-chain/forkchoice/types"
 	"github.com/prysmaticlabs/prysm/v4/beacon-chain/state"
@@ -62,7 +63,7 @@ type Getter interface {
 	HighestReceivedBlockSlot() primitives.Slot
 	ReceivedBlocksLastEpoch() (uint64, error)
 	ForkChoiceDump(context.Context) (*v1.ForkChoiceDump, error)
-	Weight(root [32]byte) (uint64, error)
+	Weight(root [32]byte) (*big.Int, error)
 	Tips() ([][32]byte, []primitives.Slot)
 	IsOptimistic(root [32]byte) (bool, error)
 	ShouldOverrideFCU() bool

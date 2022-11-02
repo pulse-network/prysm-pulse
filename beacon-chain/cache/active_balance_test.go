@@ -5,6 +5,7 @@ package cache
 import (
 	"encoding/binary"
 	"math"
+	"math/big"
 	"testing"
 
 	state_native "github.com/prysmaticlabs/prysm/v4/beacon-chain/state/state-native"
@@ -31,7 +32,7 @@ func TestBalanceCache_AddGetBalance(t *testing.T) {
 	_, err = cache.Get(st)
 	require.ErrorContains(t, ErrNotFound.Error(), err)
 
-	b := uint64(100)
+	b := big.NewInt(100)
 	require.NoError(t, cache.AddTotalEffectiveBalance(st, b))
 	cachedB, err := cache.Get(st)
 	require.NoError(t, err)
@@ -41,7 +42,7 @@ func TestBalanceCache_AddGetBalance(t *testing.T) {
 	_, err = cache.Get(st)
 	require.ErrorContains(t, ErrNotFound.Error(), err)
 
-	b = uint64(200)
+	b = big.NewInt(200)
 	require.NoError(t, cache.AddTotalEffectiveBalance(st, b))
 	cachedB, err = cache.Get(st)
 	require.NoError(t, err)
@@ -51,7 +52,7 @@ func TestBalanceCache_AddGetBalance(t *testing.T) {
 	_, err = cache.Get(st)
 	require.ErrorContains(t, ErrNotFound.Error(), err)
 
-	b = uint64(300)
+	b = big.NewInt(300)
 	require.NoError(t, cache.AddTotalEffectiveBalance(st, b))
 	cachedB, err = cache.Get(st)
 	require.NoError(t, err)

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -70,11 +71,12 @@ func ComputeWeakSubjectivityPeriod(ctx context.Context, st state.ReadOnlyBeaconS
 	}
 
 	// Average effective balance in the given validator set, in Ether.
-	t, err := TotalActiveBalance(st)
+	total, err := TotalActiveBalance(st)
 	if err != nil {
 		return 0, fmt.Errorf("cannot find total active balance of validators: %w", err)
 	}
-	t = t / N / cfg.GweiPerEth
+	balancePerValidator := new(big.Int).Div(total, new(big.Int).SetUint64(N))
+	t := new(big.Int).Div(balancePerValidator, new(big.Int).SetUint64(cfg.GweiPerEth)).Uint64()
 
 	// Maximum effective balance per validator.
 	T := cfg.MaxEffectiveBalance / cfg.GweiPerEth

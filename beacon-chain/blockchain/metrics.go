@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -340,10 +341,26 @@ func reportEpochMetrics(ctx context.Context, postState, headState state.BeaconSt
 		return errors.Errorf("invalid state type provided: %T", headState.ToProtoUnsafe())
 	}
 
-	prevEpochActiveBalances.Set(float64(b.ActivePrevEpoch))
-	prevEpochSourceBalances.Set(float64(b.PrevEpochAttested))
-	prevEpochTargetBalances.Set(float64(b.PrevEpochTargetAttested))
-	prevEpochHeadBalances.Set(float64(b.PrevEpochHeadAttested))
+	parsedActivePrevEpoch, err := strconv.ParseFloat(b.ActivePrevEpoch.String(), 64)
+	if err != nil {
+		parsedActivePrevEpoch = float64(0)
+	}
+	parsedPrevEpochAttested, err := strconv.ParseFloat(b.PrevEpochAttested.String(), 64)
+	if err != nil {
+		parsedPrevEpochAttested = float64(0)
+	}
+	parsedPrevEpochTargetAttested, err := strconv.ParseFloat(b.PrevEpochTargetAttested.String(), 64)
+	if err != nil {
+		parsedPrevEpochTargetAttested = float64(0)
+	}
+	parsedPrevEpochHeadAttested, err := strconv.ParseFloat(b.PrevEpochHeadAttested.String(), 64)
+	if err != nil {
+		parsedPrevEpochHeadAttested = float64(0)
+	}
+	prevEpochActiveBalances.Set(parsedActivePrevEpoch)
+	prevEpochSourceBalances.Set(parsedPrevEpochAttested)
+	prevEpochTargetBalances.Set(parsedPrevEpochTargetAttested)
+	prevEpochHeadBalances.Set(parsedPrevEpochHeadAttested)
 
 	refMap := postState.FieldReferencesCount()
 	for name, val := range refMap {

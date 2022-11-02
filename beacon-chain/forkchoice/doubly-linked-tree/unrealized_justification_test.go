@@ -91,8 +91,8 @@ func TestStore_LongFork(t *testing.T) {
 	headRoot, err = f.Head(ctx)
 	require.NoError(t, err)
 	require.Equal(t, [32]byte{'d'}, headRoot)
-	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight)
-	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'c'}].weight)
+	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight.Uint64())
+	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'c'}].weight.Uint64())
 
 	// Update unrealized justification, c becomes head
 	require.NoError(t, f.updateUnrealizedCheckpoints(ctx))
@@ -242,8 +242,8 @@ func TestStore_ForkNextEpoch(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [32]byte{'d'}, headRoot)
 	require.Equal(t, primitives.Epoch(2), f.JustifiedCheckpoint().Epoch)
-	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight)
-	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'h'}].weight)
+	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight.Uint64())
+	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'h'}].weight.Uint64())
 	// Set current epoch to 3, and H's unrealized checkpoint. Check it's head
 	driftGenesisTime(f, 99, 0)
 	require.NoError(t, f.store.setUnrealizedJustifiedEpoch([32]byte{'h'}, 2))
@@ -251,8 +251,8 @@ func TestStore_ForkNextEpoch(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [32]byte{'h'}, headRoot)
 	require.Equal(t, primitives.Epoch(2), f.JustifiedCheckpoint().Epoch)
-	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight)
-	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'h'}].weight)
+	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'d'}].weight.Uint64())
+	require.Equal(t, uint64(100), f.store.nodeByRoot[[32]byte{'h'}].weight.Uint64())
 }
 
 func TestStore_PullTips_Heuristics(t *testing.T) {
