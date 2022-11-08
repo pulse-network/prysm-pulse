@@ -73,12 +73,7 @@ func AttestationsDelta(state state.ReadOnlyBeaconState, pBal *Balance, vp []*Val
 	prevEpoch := time.PrevEpoch(state)
 	finalizedEpoch := state.FinalizedCheckpointEpoch()
 
-	var sqrtActiveCurrentEpoch uint64
-	if pBal.ActiveCurrentEpoch.Cmp(big.NewInt(0)) != 1 {
-		sqrtActiveCurrentEpoch = 0
-	} else {
-		sqrtActiveCurrentEpoch = new(big.Int).Sqrt(pBal.ActiveCurrentEpoch).Uint64()
-	}
+	sqrtActiveCurrentEpoch := new(big.Int).Sqrt(pBal.ActiveCurrentEpoch).Uint64()
 	for i, v := range vp {
 		rewards[i], penalties[i] = attestationDelta(pBal, sqrtActiveCurrentEpoch, v, prevEpoch, finalizedEpoch)
 	}
@@ -91,11 +86,11 @@ func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator
 	}
 
 	baseRewardsPerEpoch := params.BeaconConfig().BaseRewardsPerEpoch
-	effectiveBalanceIncrement := params.BeaconConfig().EffectiveBalanceIncrement
+	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	vb := v.CurrentEpochEffectiveBalance
 	br := vb * params.BeaconConfig().BaseRewardFactor / sqrtActiveCurrentEpoch / baseRewardsPerEpoch
 	r, p := uint64(0), uint64(0)
-	currentEpochBalance := new(big.Int).Div(pBal.ActiveCurrentEpoch, new(big.Int).SetUint64(effectiveBalanceIncrement)).Uint64()
+	currentEpochBalance := new(big.Int).Div(pBal.ActiveCurrentEpoch, effectiveBalanceIncrement).Uint64()
 
 	// Process source reward / penalty
 	if v.IsPrevEpochAttester && !v.IsSlashed {
@@ -108,7 +103,7 @@ func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator
 			// optimal participation receives full base reward compensation here.
 			r += br
 		} else {
-			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochAttested, new(big.Int).SetUint64(effectiveBalanceIncrement))).Uint64()
+			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochAttested, effectiveBalanceIncrement)).Uint64()
 			r += rewardNumerator / currentEpochBalance
 		}
 	} else {
@@ -122,7 +117,7 @@ func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator
 			// optimal participation receives full base reward compensation here.
 			r += br
 		} else {
-			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochTargetAttested, new(big.Int).SetUint64(effectiveBalanceIncrement))).Uint64()
+			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochTargetAttested, effectiveBalanceIncrement)).Uint64()
 			r += rewardNumerator / currentEpochBalance
 		}
 	} else {
@@ -136,7 +131,7 @@ func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator
 			// optimal participation receives full base reward compensation here.
 			r += br
 		} else {
-			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochHeadAttested, new(big.Int).SetUint64(effectiveBalanceIncrement))).Uint64()
+			rewardNumerator := br * (new(big.Int).Div(pBal.PrevEpochHeadAttested, effectiveBalanceIncrement)).Uint64()
 			r += rewardNumerator / currentEpochBalance
 		}
 	} else {
