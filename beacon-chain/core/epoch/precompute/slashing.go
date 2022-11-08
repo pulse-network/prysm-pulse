@@ -24,7 +24,7 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 		totalSlashing += slashing
 	}
 
-	var minSlashing *big.Int = big.NewInt(0)
+	minSlashing := pBal.ActiveCurrentEpoch
 	totalSlashingTimesPropSlashMul := new(big.Int).SetUint64(totalSlashing * params.BeaconConfig().ProportionalSlashingMultiplier)
 
 	if totalSlashingTimesPropSlashMul.Cmp(pBal.ActiveCurrentEpoch) == -1 {
@@ -55,12 +55,15 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 	validatorFunc := func(idx int, val *ethpb.Validator) (bool, *ethpb.Validator, error) {
 		correctEpoch := epochToWithdraw == val.WithdrawableEpoch
 		if val.Slashed && correctEpoch {
-			valEffectiveBal := new(big.Int).SetUint64(val.EffectiveBalance)
-			penaltyNumerator := new(big.Int).Mul(new(big.Int).Div(valEffectiveBal, increment), minSlashing)
-			penalty := new(big.Int).Mul(new(big.Int).Div(penaltyNumerator, pBal.ActiveCurrentEpoch), increment).Uint64()
-			if err := helpers.DecreaseBalance(s, types.ValidatorIndex(idx), penalty); err != nil {
+			penalty := new(big.Int).SetUint64(val.EffectiveBalance) // valEffectiveBal
+			penalty.Div(penalty, increment)                         // val.EffectiveBalance / increment
+			penalty.Mul(penalty, minSlashing)                       // penaltyNumerator = val.EffectiveBalance / increment * minSlashing
+			penalty.Div(penalty, pBal.ActiveCurrentEpoch)           // penaltyNumerator / pBal.ActiveCurrentEpoch
+			penalty = penalty.Mul(penalty, increment)               // penalty = penaltyNumerator / pBal.ActiveCurrentEpoch * increment
+			if err := helpers.DecreaseBalance(s, types.ValidatorIndex(idx), penalty.Uint64()); err != nil {
 				return false, val, err
 			}
+
 			return true, val, nil
 		}
 		return false, val, nil

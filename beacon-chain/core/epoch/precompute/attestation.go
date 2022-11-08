@@ -177,22 +177,22 @@ func UpdateBalance(vp []*Validator, bBal *Balance, stateVersion int) *Balance {
 		if !v.IsSlashed {
 			currentEpochEffectiveBalance := new(big.Int).SetUint64(v.CurrentEpochEffectiveBalance)
 			if v.IsCurrentEpochAttester {
-				bBal.CurrentEpochAttested = new(big.Int).Add(bBal.CurrentEpochAttested, currentEpochEffectiveBalance)
+				bBal.CurrentEpochAttested.Add(bBal.CurrentEpochAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsCurrentEpochTargetAttester {
-				bBal.CurrentEpochTargetAttested = new(big.Int).Add(bBal.CurrentEpochTargetAttested, currentEpochEffectiveBalance)
+				bBal.CurrentEpochTargetAttested.Add(bBal.CurrentEpochTargetAttested, currentEpochEffectiveBalance)
 			}
 			if stateVersion == version.Phase0 && v.IsPrevEpochAttester {
-				bBal.PrevEpochAttested = new(big.Int).Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
+				bBal.PrevEpochAttested.Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
 			}
 			if stateVersion >= version.Altair && v.IsPrevEpochSourceAttester {
-				bBal.PrevEpochAttested = new(big.Int).Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
+				bBal.PrevEpochAttested.Add(bBal.PrevEpochAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsPrevEpochTargetAttester {
-				bBal.PrevEpochTargetAttested = new(big.Int).Add(bBal.PrevEpochTargetAttested, currentEpochEffectiveBalance)
+				bBal.PrevEpochTargetAttested.Add(bBal.PrevEpochTargetAttested, currentEpochEffectiveBalance)
 			}
 			if v.IsPrevEpochHeadAttester {
-				bBal.PrevEpochHeadAttested = new(big.Int).Add(bBal.PrevEpochHeadAttested, currentEpochEffectiveBalance)
+				bBal.PrevEpochHeadAttested.Add(bBal.PrevEpochHeadAttested, currentEpochEffectiveBalance)
 			}
 		}
 	}

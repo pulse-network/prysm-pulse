@@ -97,8 +97,8 @@ func (s *Store) pullTips(state state.BeaconState, node *Node, jc, fc *ethpb.Chec
 		log.WithError(err).Debug("could not compute unrealized checkpoints")
 		uj, uf = jc, fc
 	}
-
-	s.committeeBalance = new(big.Int).Div(ab, new(big.Int).SetUint64(uint64(params.BeaconConfig().SlotsPerEpoch)))
+	s.committeeBalance = new(big.Int).SetUint64(uint64(params.BeaconConfig().SlotsPerEpoch))
+	s.committeeBalance.Div(ab, s.committeeBalance)
 
 	// Update store's unrealized checkpoints.
 	if uj.Epoch > s.unrealizedJustifiedCheckpoint.Epoch {

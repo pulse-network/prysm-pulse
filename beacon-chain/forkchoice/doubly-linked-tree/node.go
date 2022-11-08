@@ -30,7 +30,7 @@ func (n *Node) applyWeightChanges(ctx context.Context) error {
 	if n.root == params.BeaconConfig().ZeroHash {
 		return nil
 	}
-	n.weight = new(big.Int).Add(n.balance, childrenWeight)
+	n.weight.Add(n.balance, childrenWeight)
 	return nil
 }
 
@@ -175,14 +175,17 @@ func (f *ForkChoice) VotedFraction(root [32]byte) (*big.Int, error) {
 	defer f.store.nodesLock.RUnlock()
 
 	// Avoid division by zero before a block is inserted.
-	if f.store.committeeBalance.Cmp(big.NewInt(0)) == 0 {
-		return big.NewInt(0), nil
+	zero := big.NewInt(0)
+	if f.store.committeeBalance.Cmp(zero) == 0 {
+		return zero, nil
 	}
 
 	node, ok := f.store.nodeByRoot[root]
 	if !ok || node == nil {
-		return big.NewInt(0), ErrNilNode
+		return zero, ErrNilNode
 	}
-	result := new(big.Int).Div(new(big.Int).Mul(node.balance, big.NewInt(100)), f.store.committeeBalance)
+	result := big.NewInt(100)
+	result.Mul(result, node.balance)
+	result.Div(result, f.store.committeeBalance)
 	return result, nil
 }

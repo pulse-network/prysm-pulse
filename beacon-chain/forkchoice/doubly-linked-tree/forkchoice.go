@@ -38,6 +38,7 @@ func New() *ForkChoice {
 		nodeByPayload:                 make(map[[fieldparams.RootLength]byte]*Node),
 		slashedIndices:                make(map[types.ValidatorIndex]bool),
 		receivedBlocksLastEpoch:       [fieldparams.SlotsPerEpoch]types.Slot{},
+		committeeBalance:              big.NewInt(0),
 	}
 
 	b := make([]uint64, 0)

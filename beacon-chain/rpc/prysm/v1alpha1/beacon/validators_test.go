@@ -1572,8 +1572,23 @@ func TestServer_GetValidatorParticipation_CurrentAndPrevEpoch(t *testing.T) {
 	effectiveBal := new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
 	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
+	var globalParticipationRate float32
+	zero := big.NewInt(0)
+	if effectiveBalIncr.Cmp(zero) == 1 || valCountTimesEffBal.Cmp(zero) == 1 {
+		prevEpochTargetAttested, f1 := new(big.Float).SetString(effectiveBalIncr.String())
+		if !f1 {
+			globalParticipationRate = float32(0)
+		}
+		activePrevEpoch, f2 := new(big.Float).SetString(valCountTimesEffBal.String())
+		if !f2 {
+			globalParticipationRate = float32(0)
+		}
+		if f1 && f2 {
+			globalParticipationRate, _ = new(big.Float).Quo(prevEpochTargetAttested, activePrevEpoch).Float32()
+		}
+	}
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          new(big.Int).Div(effectiveBalIncr, valCountTimesEffBal).String(),
+		GlobalParticipationRate:          globalParticipationRate,
 		VotedEther:                       effectiveBalIncr.String(),
 		EligibleEther:                    valCountTimesEffBal.String(),
 		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
@@ -1654,8 +1669,23 @@ func TestServer_GetValidatorParticipation_OrphanedUntilGenesis(t *testing.T) {
 	effectiveBal := new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
 	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
+	var globalParticipationRate float32
+	zero := big.NewInt(0)
+	if effectiveBalIncr.Cmp(zero) == 1 || valCountTimesEffBal.Cmp(zero) == 1 {
+		prevEpochTargetAttested, f1 := new(big.Float).SetString(effectiveBalIncr.String())
+		if !f1 {
+			globalParticipationRate = float32(0)
+		}
+		activePrevEpoch, f2 := new(big.Float).SetString(valCountTimesEffBal.String())
+		if !f2 {
+			globalParticipationRate = float32(0)
+		}
+		if f1 && f2 {
+			globalParticipationRate, _ = new(big.Float).Quo(prevEpochTargetAttested, activePrevEpoch).Float32()
+		}
+	}
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          new(big.Int).Div(effectiveBalIncr, valCountTimesEffBal).String(),
+		GlobalParticipationRate:          globalParticipationRate,
 		VotedEther:                       effectiveBalIncr.String(),
 		EligibleEther:                    valCountTimesEffBal.String(),
 		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
@@ -1751,7 +1781,7 @@ func runGetValidatorParticipationCurrentAndPrevEpoch(t *testing.T, genState stat
 	effectiveBalIncr := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	valCountTimesEffBal := new(big.Int).Mul(new(big.Int).SetUint64(validatorCount), effectiveBal)
 	wanted := &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          big.NewInt(1).String(),
+		GlobalParticipationRate:          float32(1),
 		VotedEther:                       valCountTimesEffBal.String(),
 		EligibleEther:                    valCountTimesEffBal.String(),
 		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),
@@ -1769,7 +1799,7 @@ func runGetValidatorParticipationCurrentAndPrevEpoch(t *testing.T, genState stat
 	require.NoError(t, err)
 
 	wanted = &ethpb.ValidatorParticipation{
-		GlobalParticipationRate:          big.NewInt(1).String(),
+		GlobalParticipationRate:          float32(1),
 		VotedEther:                       valCountTimesEffBal.String(),
 		EligibleEther:                    valCountTimesEffBal.String(),
 		CurrentEpochActiveGwei:           valCountTimesEffBal.String(),

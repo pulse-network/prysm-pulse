@@ -136,8 +136,8 @@ func NextSyncCommitteeIndices(ctx context.Context, s state.BeaconState) ([]types
 		}
 
 		effectiveBal := new(big.Int).SetUint64(v.EffectiveBalance())
-		effectiveBalTimesMaxRandomByte := new(big.Int).Mul(effectiveBal, new(big.Int).SetUint64(maxRandomByte))
-		if effectiveBalTimesMaxRandomByte.Cmp(new(big.Int).SetUint64(cfg.MaxEffectiveBalance*uint64(randomByte))) != -1 {
+		effectiveBal.Mul(effectiveBal, new(big.Int).SetUint64(maxRandomByte))
+		if effectiveBal.Cmp(new(big.Int).SetUint64(cfg.MaxEffectiveBalance*uint64(randomByte))) != -1 {
 			cIndices = append(cIndices, cIndex)
 		}
 	}

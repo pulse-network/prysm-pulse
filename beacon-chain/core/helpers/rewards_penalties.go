@@ -39,9 +39,9 @@ func TotalBalance(state state.ReadOnlyValidators, indices []types.ValidatorIndex
 	}
 
 	// EFFECTIVE_BALANCE_INCREMENT is the lower bound for total balance.
-	effectiveBalanceIncrementBig := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
-	if total.Cmp(effectiveBalanceIncrementBig) == -1 {
-		return effectiveBalanceIncrementBig
+	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	if total.Cmp(effectiveBalanceIncrement) == -1 {
+		return effectiveBalanceIncrement
 	}
 
 	return total
@@ -84,9 +84,9 @@ func TotalActiveBalance(s state.ReadOnlyBeaconState) (*big.Int, error) {
 	}
 
 	// Spec defines `EffectiveBalanceIncrement` as min to avoid divisions by zero.
-	effectiveBalanceIncrementBig := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
-	if effectiveBalanceIncrementBig.Cmp(total) == 1 {
-		total = effectiveBalanceIncrementBig
+	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	if effectiveBalanceIncrement.Cmp(total) == 1 {
+		total = effectiveBalanceIncrement
 	}
 	if err := balanceCache.AddTotalEffectiveBalance(s, total); err != nil {
 		return zero, err

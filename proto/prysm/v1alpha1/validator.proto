@@ -629,7 +629,7 @@ message Validator {
 message ValidatorParticipation {
     // Percentage of validator participation in the given epoch. This field
     // contains a value between 0 and 1.
-    string global_participation_rate = 1  [deprecated = true];
+    float global_participation_rate = 1  [deprecated = true];
 
     // The total amount of ether, in gwei, that has been used in voting.
     string voted_ether = 2 [deprecated = true];

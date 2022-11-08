@@ -20,21 +20,19 @@ func UnrealizedCheckpointBalances(cp, pp []byte, validators []*ethpb.Validator, 
 	currentTarget := big.NewInt(0)
 	prevTarget := big.NewInt(0)
 	if len(cp) < len(validators) || len(pp) < len(validators) {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), errors.New("participation does not match validator set")
+		return activeBalance, currentTarget, prevTarget, errors.New("participation does not match validator set")
 	}
 
 	for i, v := range validators {
 		active := v.ActivationEpoch <= currentEpoch && currentEpoch < v.ExitEpoch
 		if active && !v.Slashed {
-			effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
-			activeBalance.Add(activeBalance, effectiveBalanceBig)
+			effectiveBalance := new(big.Int).SetUint64(v.EffectiveBalance)
+			activeBalance.Add(activeBalance, effectiveBalance)
 			if ((cp[i] >> targetIdx) & 1) == 1 {
-				effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
-				currentTarget.Add(currentTarget, effectiveBalanceBig)
+				currentTarget.Add(currentTarget, effectiveBalance)
 			}
 			if ((pp[i] >> targetIdx) & 1) == 1 {
-				effectiveBalanceBig := new(big.Int).SetUint64(v.EffectiveBalance)
-				prevTarget.Add(prevTarget, effectiveBalanceBig)
+				prevTarget.Add(prevTarget, effectiveBalance)
 			}
 		}
 	}
