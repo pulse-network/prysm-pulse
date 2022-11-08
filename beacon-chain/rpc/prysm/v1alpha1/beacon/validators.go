@@ -543,12 +543,27 @@ func (bs *Server) GetValidatorParticipation(
 	}
 
 	cp := bs.FinalizationFetcher.FinalizedCheckpt()
+	var globalParticipationRate float32
+	zero := big.NewInt(0)
+	if b.PrevEpochTargetAttested.Cmp(zero) == 1 || b.ActivePrevEpoch.Cmp(zero) == 1 {
+		prevEpochTargetAttested, f1 := new(big.Float).SetString(b.PrevEpochTargetAttested.String())
+		if !f1 {
+			globalParticipationRate = float32(0)
+		}
+		activePrevEpoch, f2 := new(big.Float).SetString(b.ActivePrevEpoch.String())
+		if !f2 {
+			globalParticipationRate = float32(0)
+		}
+		if f1 && f2 {
+			globalParticipationRate, _ = new(big.Float).Quo(prevEpochTargetAttested, activePrevEpoch).Float32()
+		}
+	}
 	p := &ethpb.ValidatorParticipationResponse{
 		Epoch:     requestedEpoch,
 		Finalized: requestedEpoch <= cp.Epoch,
 		Participation: &ethpb.ValidatorParticipation{
 			// TODO(7130): Remove these three deprecated fields.
-			GlobalParticipationRate:          new(big.Int).Div(b.PrevEpochTargetAttested, b.ActivePrevEpoch).String(),
+			GlobalParticipationRate:          globalParticipationRate,
 			VotedEther:                       b.PrevEpochTargetAttested.String(),
 			EligibleEther:                    b.ActivePrevEpoch.String(),
 			CurrentEpochActiveGwei:           b.ActiveCurrentEpoch.String(),

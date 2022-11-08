@@ -42,6 +42,7 @@ func InitializePrecomputeValidators(ctx context.Context, beaconState state.Beaco
 	}
 	if err := beaconState.ReadFromEveryValidator(func(idx int, val state.ReadOnlyValidator) error {
 		// Set validator's balance, inactivity score and slashed/withdrawable status.
+		effectiveBalance := new(big.Int).SetUint64(val.EffectiveBalance())
 		v := &precompute.Validator{
 			CurrentEpochEffectiveBalance: val.EffectiveBalance(),
 			InactivityScore:              inactivityScores[idx],
@@ -51,14 +52,12 @@ func InitializePrecomputeValidators(ctx context.Context, beaconState state.Beaco
 		// Set validator's active status for current epoch.
 		if helpers.IsActiveValidatorUsingTrie(val, currentEpoch) {
 			v.IsActiveCurrentEpoch = true
-			effectiveBalance := new(big.Int).SetUint64(val.EffectiveBalance())
-			bal.ActiveCurrentEpoch = new(big.Int).Add(bal.ActiveCurrentEpoch, effectiveBalance)
+			bal.ActiveCurrentEpoch.Add(bal.ActiveCurrentEpoch, effectiveBalance)
 		}
 		// Set validator's active status for previous epoch.
 		if helpers.IsActiveValidatorUsingTrie(val, prevEpoch) {
 			v.IsActivePrevEpoch = true
-			effectiveBalance := new(big.Int).SetUint64(val.EffectiveBalance())
-			bal.ActivePrevEpoch = new(big.Int).Add(bal.ActivePrevEpoch, effectiveBalance)
+			bal.ActivePrevEpoch.Add(bal.ActivePrevEpoch, effectiveBalance)
 		}
 		vals[idx] = v
 		return nil

@@ -195,7 +195,7 @@ func ProcessSlashings(state state.BeaconState, slashingMultiplier uint64) (state
 	// below equally.
 	increment := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	totalSlashingTimesMultiplier := new(big.Int).SetUint64(totalSlashing * slashingMultiplier)
-	var minSlashing *big.Int = big.NewInt(0)
+	minSlashing := totalBalance
 	if totalSlashingTimesMultiplier.Cmp(totalBalance) == -1 {
 		minSlashing = totalSlashingTimesMultiplier
 	} else {
@@ -204,10 +204,12 @@ func ProcessSlashings(state state.BeaconState, slashingMultiplier uint64) (state
 	err = state.ApplyToEveryValidator(func(idx int, val *ethpb.Validator) (bool, *ethpb.Validator, error) {
 		correctEpoch := (currentEpoch + exitLength/2) == val.WithdrawableEpoch
 		if val.Slashed && correctEpoch {
-			valEffectiveBal := new(big.Int).SetUint64(val.EffectiveBalance)
-			penaltyNumerator := new(big.Int).Mul(new(big.Int).Div(valEffectiveBal, increment), minSlashing)
-			penalty := new(big.Int).Mul(new(big.Int).Div(penaltyNumerator, totalBalance), increment).Uint64()
-			if err := helpers.DecreaseBalance(state, primitives.ValidatorIndex(idx), penalty); err != nil {
+			penalty := new(big.Int).SetUint64(val.EffectiveBalance) // val.EffectiveBalance
+			penalty.Div(penalty, increment)                         // val.EffectiveBalance / increment
+			penalty.Mul(penalty, minSlashing)                       // penaltyNumerator = val.EffectiveBalance / increment * minSlashing
+			penalty.Div(penalty, totalBalance)                      // penaltyNumerator / totalBalance
+			penalty = penalty.Mul(penalty, increment)               // penalty = penaltyNumerator / totalBalance * increment
+			if err := helpers.DecreaseBalance(state, primitives.ValidatorIndex(idx), penalty.Uint64()); err != nil {
 				return false, val, err
 			}
 			return true, val, nil

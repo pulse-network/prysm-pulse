@@ -39,7 +39,7 @@ func New(ctx context.Context, s state.BeaconState) ([]*Validator, *Balance, erro
 	if err := s.ReadFromEveryValidator(func(idx int, val state.ReadOnlyValidator) error {
 		// Was validator withdrawable or slashed
 		withdrawable := prevEpoch+1 >= val.WithdrawableEpoch()
-		effectiveBalance := val.EffectiveBalance()
+		effectiveBalance := new(big.Int).SetUint64(val.EffectiveBalance())
 		pVal := &Validator{
 			IsSlashed:                    val.Slashed(),
 			IsWithdrawableCurrentEpoch:   withdrawable,
@@ -48,12 +48,12 @@ func New(ctx context.Context, s state.BeaconState) ([]*Validator, *Balance, erro
 		// Was validator active current epoch
 		if helpers.IsActiveValidatorUsingTrie(val, currentEpoch) {
 			pVal.IsActiveCurrentEpoch = true
-			pBal.ActiveCurrentEpoch = new(big.Int).Add(pBal.ActiveCurrentEpoch, new(big.Int).SetUint64(effectiveBalance))
+			pBal.ActiveCurrentEpoch.Add(pBal.ActiveCurrentEpoch, effectiveBalance)
 		}
 		// Was validator active previous epoch
 		if helpers.IsActiveValidatorUsingTrie(val, prevEpoch) {
 			pVal.IsActivePrevEpoch = true
-			pBal.ActivePrevEpoch = new(big.Int).Add(pBal.ActivePrevEpoch, new(big.Int).SetUint64(effectiveBalance))
+			pBal.ActivePrevEpoch.Add(pBal.ActivePrevEpoch, effectiveBalance)
 		}
 		// Set inclusion slot and inclusion distance to be max, they will be compared and replaced
 		// with the lower values
