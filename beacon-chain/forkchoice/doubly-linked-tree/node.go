@@ -37,7 +37,7 @@ func (n *Node) applyWeightChanges(ctx context.Context) error {
 	if n.root == params.BeaconConfig().ZeroHash {
 		return nil
 	}
-	n.weight = new(big.Int).Add(n.balance, childrenWeight)
+	n.weight.Add(n.balance, childrenWeight)
 	return nil
 }
 

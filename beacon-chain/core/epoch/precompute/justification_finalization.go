@@ -75,9 +75,10 @@ func processJustificationBits(state state.BeaconState, totalActiveBalance, prevE
 	newBits := state.JustificationBits()
 	newBits.Shift(1)
 	// If 2/3 or more of total balance attested in the previous epoch.
-	prevEpochTargetBalanceTimesThree := big.NewInt(0).Mul(big.NewInt(3), prevEpochTargetBalance)
-	currEpochTargetBalanceTimesThree := big.NewInt(0).Mul(big.NewInt(3), currEpochTargetBalance)
-	totalActiveBalanceTimesTwo := big.NewInt(0).Mul(big.NewInt(2), totalActiveBalance)
+	three := big.NewInt(3)
+	prevEpochTargetBalanceTimesThree := new(big.Int).Mul(three, prevEpochTargetBalance)
+	currEpochTargetBalanceTimesThree := new(big.Int).Mul(three, currEpochTargetBalance)
+	totalActiveBalanceTimesTwo := new(big.Int).Mul(big.NewInt(2), totalActiveBalance)
 	if prevEpochTargetBalanceTimesThree.Cmp(totalActiveBalanceTimesTwo) != -1 {
 		newBits.SetBitAt(1, true)
 	}

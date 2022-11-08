@@ -97,10 +97,10 @@ func TestAttestationDeltaPrecompute(t *testing.T) {
 
 	// Add some variances to target and head balances.
 	// See: https://github.com/prysmaticlabs/prysm/issues/5593
-	bigTwo := big.NewInt(2)
-	bigThree := big.NewInt(3)
-	bp.PrevEpochTargetAttested = new(big.Int).Div(bp.PrevEpochTargetAttested, bigTwo)
-	bp.PrevEpochHeadAttested = new(big.Int).Div(new(big.Int).Mul(bp.PrevEpochHeadAttested, bigTwo), bigThree)
+	two := big.NewInt(2)
+	three := big.NewInt(3)
+	bp.PrevEpochTargetAttested.Div(bp.PrevEpochTargetAttested, two)
+	bp.PrevEpochHeadAttested.Div(new(big.Int).Mul(bp.PrevEpochHeadAttested, two), three)
 	rewards, penalties, err := AttestationsDelta(beaconState, bp, vp)
 	require.NoError(t, err)
 	attestedBalance, err := epoch.AttestingBalance(context.Background(), beaconState, atts)
