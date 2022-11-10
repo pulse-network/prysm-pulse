@@ -3,7 +3,7 @@ FROM ubuntu:18.04 as builder
 RUN apt update
 
 # install basic build dependencies
-RUN apt install -y cmake git libssl-dev libgmp-dev libtinfo5 unzip curl python g++
+RUN apt install -y cmake git libssl-dev libgmp-dev libtinfo5 unzip curl g++ python python3
 
 # install protoc at specific required version
 RUN PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip && \
