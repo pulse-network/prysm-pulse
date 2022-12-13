@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"errors"
+	"math"
 	"math/big"
 
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/cache"
@@ -10,6 +11,7 @@ import (
 	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
 	mathutil "github.com/prysmaticlabs/prysm/v3/math"
 	"github.com/prysmaticlabs/prysm/v3/time/slots"
+	"github.com/sirupsen/logrus"
 )
 
 var balanceCache = cache.NewEffectiveBalanceCache()
@@ -128,7 +130,12 @@ func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta ui
 //	  """
 //	  state.balances[index] += delta
 func IncreaseBalanceWithVal(currBalance, delta uint64) (uint64, error) {
-	return mathutil.Add64(currBalance, delta)
+	res, err := mathutil.Add64(currBalance, delta)
+	if err != nil {
+		logrus.Warn("validator balance overflow detected")
+		res = math.MaxUint64
+	}
+	return res, nil
 }
 
 // DecreaseBalance decreases validator with the given 'index' balance by 'delta' in Gwei.
