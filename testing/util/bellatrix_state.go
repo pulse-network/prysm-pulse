@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/altair"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/state"
 	state_native "github.com/prysmaticlabs/prysm/v3/beacon-chain/state/state-native"
@@ -14,7 +13,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v3/config/params"
 	"github.com/prysmaticlabs/prysm/v3/crypto/bls"
 	"github.com/prysmaticlabs/prysm/v3/encoding/bytesutil"
-	"github.com/prysmaticlabs/prysm/v3/math"
 	enginev1 "github.com/prysmaticlabs/prysm/v3/proto/engine/v1"
 	ethpb "github.com/prysmaticlabs/prysm/v3/proto/prysm/v1alpha1"
 )
@@ -30,24 +28,6 @@ func DeterministicGenesisStateBellatrix(t testing.TB, numValidators uint64) (sta
 		t.Fatal(errors.Wrapf(err, "failed to get eth1data for %d deposits", numValidators))
 	}
 	beaconState, err := genesisBeaconStateBellatrix(context.Background(), deposits, uint64(0), eth1Data)
-	if err != nil {
-		t.Fatal(errors.Wrapf(err, "failed to get genesis beacon state of %d validators", numValidators))
-	}
-	resetCache()
-	return beaconState, privKeys
-}
-
-// DeterministicGenesisStateBellatrix returns a genesis state in Bellatrix format made using the deterministic deposits.
-func DeterministicGenesisStateBellatrixPulse(t testing.TB, numValidators uint64, depositAmount uint64) (state.BeaconState, []bls.SecretKey) {
-	deposits, privKeys, err := DeterministicDepositsAndKeysWithDepositAmount(numValidators, depositAmount)
-	if err != nil {
-		t.Fatal(errors.Wrapf(err, "failed to get %d deposits", numValidators))
-	}
-	eth1Data, err := DeterministicEth1Data(len(deposits))
-	if err != nil {
-		t.Fatal(errors.Wrapf(err, "failed to get eth1data for %d deposits", numValidators))
-	}
-	beaconState, err := genesisBeaconStateBellatrixPulse(context.Background(), deposits, depositAmount, uint64(0), eth1Data)
 	if err != nil {
 		t.Fatal(errors.Wrapf(err, "failed to get genesis beacon state of %d validators", numValidators))
 	}
@@ -75,77 +55,6 @@ func genesisBeaconStateBellatrix(ctx context.Context, deposits []*ethpb.Deposit,
 
 	return buildGenesisBeaconStateBellatrix(genesisTime, st, st.Eth1Data())
 }
-
-// genesisBeaconStateBellatrix returns the genesis beacon state for PulseChain.
-func genesisBeaconStateBellatrixPulse(ctx context.Context, deposits []*ethpb.Deposit, depositAmount uint64, genesisTime uint64, eth1Data *ethpb.Eth1Data) (state.BeaconState, error) {
-	st, err := emptyGenesisStateBellatrix()
-	if err != nil {
-		return nil, err
-	}
-
-	// Process initial deposits.
-	st, err = helpers.UpdateGenesisEth1Data(st, deposits, eth1Data)
-	if err != nil {
-		return nil, err
-	}
-
-	st, err = processPreGenesisDepositsPulse(ctx, st, deposits, depositAmount)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not process validator deposits")
-	}
-
-	return buildGenesisBeaconStateBellatrix(genesisTime, st, st.Eth1Data())
-}
-
-// processPreGenesisDeposits processes a deposit for the beacon state Altair before chain start.
-func processPreGenesisDepositsPulse(
-	ctx context.Context,
-	beaconState state.BeaconState,
-	deposits []*ethpb.Deposit,
-	depositAmount uint64,
-) (state.BeaconState, error) {
-	var err error
-	beaconState, err = altair.ProcessDeposits(ctx, beaconState, deposits)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not process deposit")
-	}
-	beaconState, err = ActivateValidatorWithEffectiveBalancePulse(beaconState, deposits, depositAmount)
-	if err != nil {
-		return nil, err
-	}
-	return beaconState, nil
-}
-
-// ActivateValidatorWithEffectiveBalance updates validator's effective balance, and if it's above MaxEffectiveBalance, validator becomes active in genesis.
-func ActivateValidatorWithEffectiveBalancePulse(beaconState state.BeaconState, deposits []*ethpb.Deposit, depositAmount uint64) (state.BeaconState, error) {
-	for _, d := range deposits {
-		pubkey := d.Data.PublicKey
-		index, ok := beaconState.ValidatorIndexByPubkey(bytesutil.ToBytes48(pubkey))
-		// In the event of the pubkey not existing, we continue processing the other
-		// deposits.
-		if !ok {
-			continue
-		}
-		balance, err := beaconState.BalanceAtIndex(index)
-		if err != nil {
-			return nil, err
-		}
-		validator, err := beaconState.ValidatorAtIndex(index)
-		if err != nil {
-			return nil, err
-		}
-		validator.EffectiveBalance = math.Min(balance-balance%params.BeaconConfig().EffectiveBalanceIncrement, depositAmount)
-		if validator.EffectiveBalance == depositAmount {
-			validator.ActivationEligibilityEpoch = 0
-			validator.ActivationEpoch = 0
-		}
-		if err := beaconState.UpdateValidatorAtIndex(index, validator); err != nil {
-			return nil, err
-		}
-	}
-	return beaconState, nil
-}
-
 
 // emptyGenesisStateBellatrix returns an empty genesis state in Bellatrix format.
 func emptyGenesisStateBellatrix() (state.BeaconState, error) {

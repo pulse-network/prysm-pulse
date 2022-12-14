@@ -21,18 +21,18 @@ import (
 )
 
 func TestPulseChainValidatorRewardsMock(t *testing.T) {
-	cfg := params.BeaconConfig()
+	cfg := params.MainnetConfig()
 	cfg.BaseRewardFactor = 780000
+	cfg.MinDepositAmount = 16000000000000000
+	cfg.MaxEffectiveBalance = 32000000000000000
 	params.OverrideBeaconConfig(cfg)
 	// Vars
 	numOfVals := uint64(18312)
-	depositAmount := uint64(3200000000000000)
 	slotsPerEpoch := uint64(32)
 	amountOfEpochsToProcess := 5
-	
 
 	// Generate genesis Beaconchain state with required num of vals and deposit amounts
-	beaconState, privKeys := util.DeterministicGenesisStateBellatrixPulse(t, numOfVals, depositAmount)
+	beaconState, privKeys := util.DeterministicGenesisStateBellatrix(t, numOfVals)
 	validators, balance, err := altair.InitializePrecomputeValidators(context.Background(), beaconState)
 	require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func TestPulseChainValidatorRewardsMock(t *testing.T) {
 	// Sync rewards being processed per each slot
 	// Epoch rewards being processed per each epoch
 	var slotCounter uint64
-	for i := 0; i < int(slotsPerEpoch) * amountOfEpochsToProcess; i++ {
+	for i := 0; i < int(slotsPerEpoch)*amountOfEpochsToProcess; i++ {
 		// Progress 1 slot each itteration
 		require.NoError(t, beaconState.SetSlot(types.Slot(i+1)))
 		slotCounter++
@@ -104,7 +104,7 @@ func TestPulseChainValidatorRewardsMock(t *testing.T) {
 	var totalRewards *big.Int = big.NewInt(0)
 	bal := beaconState.Balances()
 	for i := 0; i < len(bal); i++ {
-		totalRewards.Add(totalRewards, new(big.Int).Sub(new(big.Int).SetUint64(bal[i]), new(big.Int).SetUint64(depositAmount)))
+		totalRewards.Add(totalRewards, new(big.Int).Sub(new(big.Int).SetUint64(bal[i]), new(big.Int).SetUint64(cfg.MaxEffectiveBalance)))
 	}
 	t.Log("totalRewards:", totalRewards)
 }
