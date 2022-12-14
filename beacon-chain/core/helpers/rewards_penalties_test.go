@@ -257,7 +257,7 @@ func buildState(slot primitives.Slot, validatorCount uint64) *ethpb.BeaconState 
 	}
 }
 
-func TestIncreaseBadBalance_NotOK(t *testing.T) {
+func TestIncreaseBalance_OverflowCapped(t *testing.T) {
 	tests := []struct {
 		i  primitives.ValidatorIndex
 		b  []uint64
@@ -273,6 +273,9 @@ func TestIncreaseBadBalance_NotOK(t *testing.T) {
 			Balances: test.b,
 		})
 		require.NoError(t, err)
-		require.ErrorContains(t, "addition overflows", IncreaseBalance(state, test.i, test.nb))
+		require.NoError(t, IncreaseBalance(state, test.i, test.nb))
+		for _, bal := range state.Balances() {
+			require.Equal(t, bal, uint64(math.MaxUint64))
+		}
 	}
 }
