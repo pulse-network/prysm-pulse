@@ -313,6 +313,7 @@ type StreamBlocksResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Block:
+	//
 	//	*StreamBlocksResponse_Phase0Block
 	//	*StreamBlocksResponse_AltairBlock
 	//	*StreamBlocksResponse_BellatrixBlock

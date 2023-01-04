@@ -30,6 +30,7 @@ type GenericSignedBeaconBlock struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Block:
+	//
 	//	*GenericSignedBeaconBlock_Phase0
 	//	*GenericSignedBeaconBlock_Altair
 	//	*GenericSignedBeaconBlock_Bellatrix
@@ -166,6 +167,7 @@ type GenericBeaconBlock struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Block:
+	//
 	//	*GenericBeaconBlock_Phase0
 	//	*GenericBeaconBlock_Altair
 	//	*GenericBeaconBlock_Bellatrix
