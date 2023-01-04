@@ -202,7 +202,8 @@ func ProcessDeposit(beaconState state.BeaconState, deposit *ethpb.Deposit, verif
 		if err := beaconState.AppendBalance(amount); err != nil {
 			return nil, newValidator, err
 		}
-	} else if err := helpers.IncreaseBalance(beaconState, index, amount); err != nil {
+		// Do not apply burn to deposits.
+	} else if err := helpers.IncreaseBalance(beaconState, index, amount, false); err != nil {
 		return nil, newValidator, err
 	}
 
