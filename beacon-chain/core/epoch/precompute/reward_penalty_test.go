@@ -55,7 +55,7 @@ func TestProcessRewardsAndPenaltiesPrecompute(t *testing.T) {
 	assert.Equal(t, wanted, beaconState.Balances()[4], "Unexpected balance")
 
 	// Indices that did not vote, lost more money
-	wanted = uint64(31999873505)
+	wanted = uint64(31999857695) // with 25% pulse burn applied
 	assert.Equal(t, wanted, beaconState.Balances()[0], "Unexpected balance")
 }
 

@@ -298,7 +298,7 @@ func TestProcessRewardsAndPenaltiesPrecompute_Ok(t *testing.T) {
 	rewards, penalties, err := AttestationsDelta(s, balance, validators)
 	require.NoError(t, err)
 	for i := range rewards {
-		wanted[i] += rewards[i]
+		wanted[i] += (rewards[i] * 3 / 4) // with 25% pulse burn applied
 	}
 	for i := range penalties {
 		if wanted[i] > penalties[i] {
@@ -329,8 +329,8 @@ func TestProcessRewardsAndPenaltiesPrecompute_InactivityLeak(t *testing.T) {
 	balances := s.Balances()
 	inactivityBalances := sCopy.Balances()
 	// Balances decreased to 0 due to inactivity
-	require.Equal(t, uint64(2101898), balances[2])
-	require.Equal(t, uint64(2414946), balances[3])
+	require.Equal(t, uint64(1576423), balances[2]) // with 25% pulse burn applied
+	require.Equal(t, uint64(1811209), balances[3]) // with 25% pulse burn applied
 	require.Equal(t, uint64(0), inactivityBalances[2])
 	require.Equal(t, uint64(0), inactivityBalances[3])
 }
