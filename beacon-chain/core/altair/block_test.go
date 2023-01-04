@@ -195,7 +195,7 @@ func TestProcessSyncCommittee_DontPrecompute(t *testing.T) {
 	require.Equal(t, 511, len(votedKeys))
 	require.DeepEqual(t, committeeKeys[0], votedKeys[0].Marshal())
 	balances := st.Balances()
-	require.Equal(t, uint64(988), balances[idx])
+	require.Equal(t, uint64(741), balances[idx]) // with 25% pulse burn applied
 }
 
 func TestProcessSyncCommittee_processSyncAggregate(t *testing.T) {
@@ -235,7 +235,7 @@ func TestProcessSyncCommittee_processSyncAggregate(t *testing.T) {
 			require.DeepEqual(t, true, votedMap[pk])
 			idx, ok := st.ValidatorIndexByPubkey(pk)
 			require.Equal(t, true, ok)
-			require.Equal(t, uint64(32000000988), balances[idx])
+			require.Equal(t, uint64(32000000741), balances[idx]) // with 25% pulse burn applied
 		} else {
 			pk := bytesutil.ToBytes48(committeeKeys[i])
 			require.DeepEqual(t, false, votedMap[pk])
@@ -246,7 +246,7 @@ func TestProcessSyncCommittee_processSyncAggregate(t *testing.T) {
 			}
 		}
 	}
-	require.Equal(t, uint64(32000035108), balances[proposerIndex])
+	require.Equal(t, uint64(32000026084), balances[proposerIndex]) // with pulse burn applied
 }
 
 func Test_VerifySyncCommitteeSig(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/cache"
+	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/pulse"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/state"
 	"github.com/prysmaticlabs/prysm/v3/config/params"
 	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
@@ -98,6 +99,8 @@ func TotalActiveBalance(s state.ReadOnlyBeaconState) (*big.Int, error) {
 }
 
 // IncreaseBalance increases validator with the given 'index' balance by 'delta' in Gwei.
+// 
+// Optional `applyBurn` applies the PulseChain burn to the delta.
 //
 // Spec pseudocode definition:
 //
@@ -106,12 +109,12 @@ func TotalActiveBalance(s state.ReadOnlyBeaconState) (*big.Int, error) {
 //	  Increase the validator balance at index ``index`` by ``delta``.
 //	  """
 //	  state.balances[index] += delta
-func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta uint64) error {
+func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta uint64, applyBurn bool) error {
 	balAtIdx, err := state.BalanceAtIndex(idx)
 	if err != nil {
 		return err
 	}
-	newBal, err := IncreaseBalanceWithVal(balAtIdx, delta)
+	newBal, err := IncreaseBalanceWithVal(balAtIdx, delta, applyBurn)
 	if err != nil {
 		return err
 	}
@@ -122,6 +125,8 @@ func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta ui
 // This method is flattened version of the spec method, taking in the raw balance and returning
 // the post balance.
 //
+// Optional `applyBurn` applies the PulseChain burn to the delta.
+//
 // Spec pseudocode definition:
 //
 //	def increase_balance(state: BeaconState, index: ValidatorIndex, delta: Gwei) -> None:
@@ -129,7 +134,10 @@ func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta ui
 //	  Increase the validator balance at index ``index`` by ``delta``.
 //	  """
 //	  state.balances[index] += delta
-func IncreaseBalanceWithVal(currBalance, delta uint64) (uint64, error) {
+func IncreaseBalanceWithVal(currBalance, delta uint64, applyBurn bool) (uint64, error) {
+	if applyBurn {
+		delta = pulse.ApplyBurn(delta)
+	}
 	res, err := mathutil.Add64(currBalance, delta)
 	if err != nil {
 		logrus.Warn("validator balance overflow detected")
