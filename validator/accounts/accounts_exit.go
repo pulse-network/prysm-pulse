@@ -127,6 +127,7 @@ func displayExitInfo(rawExitedKeys [][]byte, trimmedExitedKeys []string) {
 		urlFormattedPubKeys := make([]string, len(rawExitedKeys))
 		for i, key := range rawExitedKeys {
 			var baseUrl string
+			// TODO: Add URLs for PulseChain explorer.
 			if params.BeaconConfig().ConfigName == params.PraterName || params.BeaconConfig().ConfigName == params.GoerliName {
 				baseUrl = "https://goerli.beaconcha.in/validator/"
 			} else {

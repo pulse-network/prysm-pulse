@@ -122,6 +122,20 @@ func configureTestnet(ctx *cli.Context) error {
 		}
 		applyPraterFeatureFlags(ctx)
 		params.UsePraterNetworkConfig()
+	} else if ctx.Bool(PulseChain.Name) {
+		log.Warn("Running on the PulseChain Beacon Chain Mainnet")
+		if err := params.SetActive(params.PulseChainConfig().Copy()); err != nil {
+			return err
+		}
+		applyPulseChainFeatureFlags(ctx)
+		params.UsePulseChainNetworkConfig()
+	} else if ctx.Bool(PulseChainTestnet.Name) {
+		log.Warn("Running on the PulseChain Beacon Chain Testnet")
+		if err := params.SetActive(params.PulseChainTestnetConfig().Copy()); err != nil {
+			return err
+		}
+		applyPulseChainTestnetFeatureFlags(ctx)
+		params.UsePulseChainTestnetNetworkConfig()
 	} else if ctx.Bool(RopstenTestnet.Name) {
 		log.Warn("Running on the Ropsten Beacon Chain Testnet")
 		if err := params.SetActive(params.RopstenConfig().Copy()); err != nil {
@@ -154,6 +168,14 @@ func applyPraterFeatureFlags(ctx *cli.Context) {
 	if err := ctx.Set(EnableOnlyBlindedBeaconBlocks.Names()[0], "true"); err != nil {
 		log.WithError(err).Debug("error enabling only saving blinded beacon blocks flag")
 	}
+}
+
+// Insert feature flags within the function to be enabled for PulseChain mainnet.
+func applyPulseChainFeatureFlags(ctx *cli.Context) {
+}
+
+// Insert feature flags within the function to be enabled for PulseChain testnet.
+func applyPulseChainTestnetFeatureFlags(ctx *cli.Context) {
 }
 
 // Insert feature flags within the function to be enabled for Ropsten testnet.
