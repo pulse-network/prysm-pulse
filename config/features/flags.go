@@ -13,6 +13,11 @@ var (
 		Usage:   "Run Prysm configured for the Prater / Goerli test network",
 		Aliases: []string{"goerli"},
 	}
+	// PulseChainTestnet flag for the multiclient Ethereum consensus testnet.
+	PulseChainTestnet = &cli.BoolFlag{
+		Name:  "pulsechain-testnet",
+		Usage: "Run Prysm configured for the PulseChain beacon chain test network",
+	}
 	// SepoliaTestnet flag for the multiclient Ethereum consensus testnet.
 	SepoliaTestnet = &cli.BoolFlag{
 		Name:  "sepolia",
@@ -23,6 +28,11 @@ var (
 		Value: true,
 		Name:  "mainnet",
 		Usage: "Run on Ethereum Beacon Chain Main Net. This is the default and can be omitted.",
+	}
+	// PulseChain flag for the multiclient Ethereum consensus mainnet.
+	PulseChain = &cli.BoolFlag{
+		Name:  "pulsechain",
+		Usage: "Run Prysm configured for the PulseChain beacon chain mainnnet",
 	}
 	devModeFlag = &cli.BoolFlag{
 		Name:  "dev",
@@ -161,8 +171,10 @@ var ValidatorFlags = append(deprecatedFlags, []cli.Flag{
 	writeWalletPasswordOnWebOnboarding,
 	enableExternalSlasherProtectionFlag,
 	PraterTestnet,
+	PulseChainTestnet,
 	SepoliaTestnet,
 	Mainnet,
+	PulseChain,
 	dynamicKeyReloadDebounceInterval,
 	attestTimely,
 	enableSlashingProtectionPruning,
@@ -181,8 +193,10 @@ var BeaconChainFlags = append(deprecatedBeaconFlags, append(deprecatedFlags, []c
 	writeSSZStateTransitionsFlag,
 	disableGRPCConnectionLogging,
 	PraterTestnet,
+	PulseChainTestnet,
 	SepoliaTestnet,
 	Mainnet,
+	PulseChain,
 	disablePeerScorer,
 	disableBroadcastSlashingFlag,
 	enableSlasherFlag,
@@ -210,6 +224,8 @@ var E2EBeaconChainFlags = []string{
 // NetworkFlags contains a list of network flags.
 var NetworkFlags = []cli.Flag{
 	Mainnet,
+	PulseChain,
 	PraterTestnet,
+	PulseChainTestnet,
 	SepoliaTestnet,
 }
