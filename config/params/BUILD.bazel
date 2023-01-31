@@ -12,10 +12,12 @@ go_library(
         "io_config.go",
         "loader.go",
         "mainnet_config.go",
+        "mainnet_pulsechain_config.go",
         "minimal_config.go",
         "network_config.go",
         "testnet_e2e_config.go",
         "testnet_prater_config.go",
+        "testnet_pulsechain_config.go",
         "testnet_sepolia_config.go",
         "testutils.go",
         "testutils_develop.go",  # keep
