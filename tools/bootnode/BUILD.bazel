@@ -51,8 +51,8 @@ go_binary(
 container_bundle(
     name = "image_bundle",
     images = {
-        "gcr.io/prysmaticlabs/prysm/bootnode:latest": ":image",
-        "gcr.io/prysmaticlabs/prysm/bootnode:{DOCKER_TAG}": ":image",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/bootnode:latest": ":image",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/bootnode:{DOCKER_TAG}": ":image",
     },
     tags = ["manual"],
 )
