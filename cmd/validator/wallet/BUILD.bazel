@@ -15,7 +15,6 @@ go_library(
         "//cmd/validator/flags:go_default_library",
         "//config/features:go_default_library",
         "//io/prompt:go_default_library",
-        "//runtime/tos:go_default_library",
         "//validator/accounts:go_default_library",
         "//validator/accounts/userprompt:go_default_library",
         "//validator/accounts/wallet:go_default_library",
