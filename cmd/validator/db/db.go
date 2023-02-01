@@ -2,7 +2,6 @@ package db
 
 import (
 	"github.com/prysmaticlabs/prysm/v4/cmd"
-	"github.com/prysmaticlabs/prysm/v4/runtime/tos"
 	validatordb "github.com/prysmaticlabs/prysm/v4/validator/db"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -23,7 +22,6 @@ var Commands = &cli.Command{
 				cmd.RestoreSourceFileFlag,
 				cmd.RestoreTargetDirFlag,
 			}),
-			Before: tos.VerifyTosAcceptedOrPrompt,
 			Action: func(cliCtx *cli.Context) error {
 				if err := validatordb.Restore(cliCtx); err != nil {
 					log.WithError(err).Fatal("Could not restore database")
@@ -42,7 +40,6 @@ var Commands = &cli.Command{
 					Flags: cmd.WrapFlags([]cli.Flag{
 						cmd.DataDirFlag,
 					}),
-					Before: tos.VerifyTosAcceptedOrPrompt,
 					Action: func(cliCtx *cli.Context) error {
 						if err := validatordb.MigrateUp(cliCtx); err != nil {
 							log.WithError(err).Fatal("Could not run database migrations")
@@ -56,7 +53,6 @@ var Commands = &cli.Command{
 					Flags: cmd.WrapFlags([]cli.Flag{
 						cmd.DataDirFlag,
 					}),
-					Before: tos.VerifyTosAcceptedOrPrompt,
 					Action: func(cliCtx *cli.Context) error {
 						if err := validatordb.MigrateDown(cliCtx); err != nil {
 							log.WithError(err).Fatal("Could not run database migrations")
