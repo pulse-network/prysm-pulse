@@ -3,7 +3,6 @@ package db
 import (
 	beacondb "github.com/prysmaticlabs/prysm/v4/beacon-chain/db"
 	"github.com/prysmaticlabs/prysm/v4/cmd"
-	"github.com/prysmaticlabs/prysm/v4/runtime/tos"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -23,7 +22,6 @@ var Commands = &cli.Command{
 				cmd.RestoreSourceFileFlag,
 				cmd.RestoreTargetDirFlag,
 			}),
-			Before: tos.VerifyTosAcceptedOrPrompt,
 			Action: func(cliCtx *cli.Context) error {
 				if err := beacondb.Restore(cliCtx); err != nil {
 					log.WithError(err).Fatal("Could not restore database")
