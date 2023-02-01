@@ -1,4 +1,4 @@
-# Dependency Management in Prysm
+# Dependency Management in Prysm-Pulse
 
 Prysm is go project with many complicated dependencies, including some c++ based libraries. There
 are two parts to Prysm's dependency management. Go modules and bazel managed dependencies. Be sure 
