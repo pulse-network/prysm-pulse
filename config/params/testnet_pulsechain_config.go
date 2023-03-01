@@ -15,7 +15,7 @@ func PulseChainTestnetConfig() *BeaconChainConfig {
 	cfg := MainnetConfig().Copy()
 	cfg.ConfigName = PulseChainTestnetName
 	cfg.TerminalTotalDifficulty = "58750003716598352947541"
-	cfg.MinGenesisActiveValidatorCount = 5000
+	cfg.MinGenesisActiveValidatorCount = 4096
 	cfg.MinGenesisTime = 1674864000
 	cfg.GenesisForkVersion = []byte{0x00, 0x00, 0x09, 0x42}
 	cfg.GenesisDelay = 300
