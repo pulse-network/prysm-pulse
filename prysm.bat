@@ -1,5 +1,8 @@
 @echo off
 
+echo "Sorry, but prysm.bat cannot be used for PulseChain at this time."
+exit /b 1
+
 SetLocal EnableDelayedExpansion & REM All variables are set local to this run & expanded at execution time rather than at parse time (tip: echo !output!)
 
 set PRYLABS_SIGNING_KEY=0AE0051D647BA3C1A917AF4072E33E4DF1A5036E
