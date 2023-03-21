@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "Sorry, but prysm.sh cannot be used for PulseChain at this time."
+exit 1
+
 set -eu
 
 # Use this script to download the latest Prysm release binary.
