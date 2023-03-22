@@ -1,12 +1,13 @@
 package precompute
 
 import (
+	"math/big"
+
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/time"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/state"
 	"github.com/prysmaticlabs/prysm/v3/config/params"
 	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v3/math"
 	ethpb "github.com/prysmaticlabs/prysm/v3/proto/prysm/v1alpha1"
 )
 
@@ -23,7 +24,14 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 		totalSlashing += slashing
 	}
 
-	minSlashing := math.Min(totalSlashing*params.BeaconConfig().ProportionalSlashingMultiplier, pBal.ActiveCurrentEpoch)
+	minSlashing := pBal.ActiveCurrentEpoch
+	totalSlashingTimesPropSlashMul := new(big.Int).SetUint64(totalSlashing * params.BeaconConfig().ProportionalSlashingMultiplier)
+
+	if totalSlashingTimesPropSlashMul.Cmp(pBal.ActiveCurrentEpoch) == -1 {
+		minSlashing = totalSlashingTimesPropSlashMul
+	} else {
+		minSlashing = pBal.ActiveCurrentEpoch
+	}
 	epochToWithdraw := currentEpoch + exitLength/2
 
 	var hasSlashing bool
@@ -43,15 +51,19 @@ func ProcessSlashingsPrecompute(s state.BeaconState, pBal *Balance) error {
 		return nil
 	}
 
-	increment := params.BeaconConfig().EffectiveBalanceIncrement
+	increment := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
 	validatorFunc := func(idx int, val *ethpb.Validator) (bool, *ethpb.Validator, error) {
 		correctEpoch := epochToWithdraw == val.WithdrawableEpoch
 		if val.Slashed && correctEpoch {
-			penaltyNumerator := val.EffectiveBalance / increment * minSlashing
-			penalty := penaltyNumerator / pBal.ActiveCurrentEpoch * increment
-			if err := helpers.DecreaseBalance(s, types.ValidatorIndex(idx), penalty); err != nil {
+			penalty := new(big.Int).SetUint64(val.EffectiveBalance) // valEffectiveBal
+			penalty.Div(penalty, increment)                         // val.EffectiveBalance / increment
+			penalty.Mul(penalty, minSlashing)                       // penaltyNumerator = val.EffectiveBalance / increment * minSlashing
+			penalty.Div(penalty, pBal.ActiveCurrentEpoch)           // penaltyNumerator / pBal.ActiveCurrentEpoch
+			penalty = penalty.Mul(penalty, increment)               // penalty = penaltyNumerator / pBal.ActiveCurrentEpoch * increment
+			if err := helpers.DecreaseBalance(s, types.ValidatorIndex(idx), penalty.Uint64()); err != nil {
 				return false, val, err
 			}
+
 			return true, val, nil
 		}
 		return false, val, nil

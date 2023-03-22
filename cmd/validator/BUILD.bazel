@@ -29,7 +29,6 @@ go_library(
         "//runtime/debug:go_default_library",
         "//runtime/logging/logrus-prefixed-formatter:go_default_library",
         "//runtime/maxprocs:go_default_library",
-        "//runtime/tos:go_default_library",
         "//runtime/version:go_default_library",
         "//validator/node:go_default_library",
         "@com_github_joonix_log//:go_default_library",
@@ -61,10 +60,8 @@ container_image(
 container_bundle(
     name = "image_bundle",
     images = {
-        "gcr.io/prysmaticlabs/prysm/validator:latest": ":image_with_creation_time",
-        "gcr.io/prysmaticlabs/prysm/validator:{DOCKER_TAG}": ":image_with_creation_time",
-        "index.docker.io/prysmaticlabs/prysm-validator:latest": ":image_with_creation_time",
-        "index.docker.io/prysmaticlabs/prysm-validator:{DOCKER_TAG}": ":image_with_creation_time",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:latest": ":image_with_creation_time",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:{DOCKER_TAG}": ":image_with_creation_time",
     },
     tags = ["manual"],
     visibility = ["//validator:__pkg__"],
@@ -80,10 +77,8 @@ go_image_debug(
 container_bundle(
     name = "image_bundle_debug",
     images = {
-        "gcr.io/prysmaticlabs/prysm/validator:latest-debug": ":image_debug",
-        "gcr.io/prysmaticlabs/prysm/validator:{DOCKER_TAG}-debug": ":image_debug",
-        "index.docker.io/prysmaticlabs/prysm-validator:latest-debug": ":image_debug",
-        "index.docker.io/prysmaticlabs/prysm-validator:{DOCKER_TAG}-debug": ":image_debug",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:latest-debug": ":image_debug",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:{DOCKER_TAG}-debug": ":image_debug",
     },
     tags = ["manual"],
     visibility = ["//validator:__pkg__"],
@@ -99,10 +94,8 @@ go_image_alpine(
 container_bundle(
     name = "image_bundle_alpine",
     images = {
-        "gcr.io/prysmaticlabs/prysm/validator:latest-alpine": ":image_alpine",
-        "gcr.io/prysmaticlabs/prysm/validator:{DOCKER_TAG}-alpine": ":image_alpine",
-        "index.docker.io/prysmaticlabs/prysm-validator:latest-alpine": ":image_alpine",
-        "index.docker.io/prysmaticlabs/prysm-validator:{DOCKER_TAG}-alpine": ":image_alpine",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:latest-alpine": ":image_alpine",
+        "registry.gitlab.com/pulsechaincom/prysm-pulse/validator:{DOCKER_TAG}-alpine": ":image_alpine",
     },
     tags = ["manual"],
     visibility = ["//validator:__pkg__"],

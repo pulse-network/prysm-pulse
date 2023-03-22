@@ -1,6 +1,7 @@
 package doublylinkedtree
 
 import (
+	"math/big"
 	"sync"
 
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/forkchoice"
@@ -42,7 +43,7 @@ type Store struct {
 	highestReceivedNode           *Node                                 // The highest slot node.
 	receivedBlocksLastEpoch       [fieldparams.SlotsPerEpoch]types.Slot // Using `highestReceivedSlot`. The slot of blocks received in the last epoch.
 	allTipsAreInvalid             bool                                  // tracks if all tips are not viable for head
-	committeeBalance              uint64                                // tracks the total active validator balance divided by slots per epoch. Requires a lock on nodes to read/write
+	committeeBalance              *big.Int                              // tracks the total active validator balance divided by slots per epoch. Requires a lock on nodes to read/write
 }
 
 // Node defines the individual block which includes its block parent, ancestor and how much weight accounted for it.
@@ -57,8 +58,8 @@ type Node struct {
 	unrealizedJustifiedEpoch types.Epoch                  // the epoch that would be justified if the block would be advanced to the next epoch.
 	finalizedEpoch           types.Epoch                  // finalizedEpoch of this node.
 	unrealizedFinalizedEpoch types.Epoch                  // the epoch that would be finalized if the block would be advanced to the next epoch.
-	balance                  uint64                       // the balance that voted for this node directly
-	weight                   uint64                       // weight of this node: the total balance including children
+	balance                  *big.Int                     // the balance that voted for this node directly
+	weight                   *big.Int                     // weight of this node: the total balance including children
 	bestDescendant           *Node                        // bestDescendant node of this node.
 	optimistic               bool                         // whether the block has been fully validated or not
 	timestamp                uint64                       // The timestamp when the node was inserted.

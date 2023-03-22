@@ -7,15 +7,14 @@
 package v1
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	_ "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	github_com_prysmaticlabs_prysm_v3_consensus_types_primitives "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
 	_ "github.com/prysmaticlabs/prysm/v3/proto/eth/ext"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -2199,8 +2198,8 @@ type ForkChoiceNode struct {
 	FinalizedEpoch           github_com_prysmaticlabs_prysm_v3_consensus_types_primitives.Epoch `protobuf:"varint,5,opt,name=finalized_epoch,json=finalizedEpoch,proto3" json:"finalized_epoch,omitempty" cast-type:"github.com/prysmaticlabs/prysm/v3/consensus-types/primitives.Epoch"`
 	UnrealizedJustifiedEpoch github_com_prysmaticlabs_prysm_v3_consensus_types_primitives.Epoch `protobuf:"varint,6,opt,name=unrealized_justified_epoch,json=unrealizedJustifiedEpoch,proto3" json:"unrealized_justified_epoch,omitempty" cast-type:"github.com/prysmaticlabs/prysm/v3/consensus-types/primitives.Epoch"`
 	UnrealizedFinalizedEpoch github_com_prysmaticlabs_prysm_v3_consensus_types_primitives.Epoch `protobuf:"varint,7,opt,name=unrealized_finalized_epoch,json=unrealizedFinalizedEpoch,proto3" json:"unrealized_finalized_epoch,omitempty" cast-type:"github.com/prysmaticlabs/prysm/v3/consensus-types/primitives.Epoch"`
-	Balance                  uint64                                                             `protobuf:"varint,8,opt,name=balance,proto3" json:"balance,omitempty"`
-	Weight                   uint64                                                             `protobuf:"varint,9,opt,name=weight,proto3" json:"weight,omitempty"`
+	Balance                  string                                                             `protobuf:"bytes,8,opt,name=balance,proto3" json:"balance,omitempty"`
+	Weight                   string                                                             `protobuf:"bytes,9,opt,name=weight,proto3" json:"weight,omitempty"`
 	ExecutionOptimistic      bool                                                               `protobuf:"varint,10,opt,name=execution_optimistic,json=executionOptimistic,proto3" json:"execution_optimistic,omitempty"`
 	ExecutionBlockHash       []byte                                                             `protobuf:"bytes,11,opt,name=execution_block_hash,json=executionBlockHash,proto3" json:"execution_block_hash,omitempty" ssz-size:"32"`
 	Timestamp                uint64                                                             `protobuf:"varint,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
@@ -2288,18 +2287,18 @@ func (x *ForkChoiceNode) GetUnrealizedFinalizedEpoch() github_com_prysmaticlabs_
 	return github_com_prysmaticlabs_prysm_v3_consensus_types_primitives.Epoch(0)
 }
 
-func (x *ForkChoiceNode) GetBalance() uint64 {
+func (x *ForkChoiceNode) GetBalance() string {
 	if x != nil {
 		return x.Balance
 	}
-	return 0
+	return ""
 }
 
-func (x *ForkChoiceNode) GetWeight() uint64 {
+func (x *ForkChoiceNode) GetWeight() string {
 	if x != nil {
 		return x.Weight
 	}
-	return 0
+	return ""
 }
 
 func (x *ForkChoiceNode) GetExecutionOptimistic() bool {
@@ -2922,9 +2921,9 @@ var file_proto_eth_v1_beacon_chain_proto_rawDesc = []byte{
 	0x70, 0x65, 0x73, 0x2f, 0x70, 0x72, 0x69, 0x6d, 0x69, 0x74, 0x69, 0x76, 0x65, 0x73, 0x2e, 0x45,
 	0x70, 0x6f, 0x63, 0x68, 0x52, 0x18, 0x75, 0x6e, 0x72, 0x65, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64,
 	0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x12, 0x18,
-	0x0a, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0a, 0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x77, 0x65, 0x69, 0x67,
-	0x68, 0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74,
+	0x68, 0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74,
 	0x12, 0x31, 0x0a, 0x14, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70,
 	0x74, 0x69, 0x6d, 0x69, 0x73, 0x74, 0x69, 0x63, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x08, 0x52, 0x13,
 	0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69, 0x6d, 0x69, 0x73,

@@ -3,6 +3,7 @@ package doublylinkedtree
 import (
 	"bytes"
 	"context"
+	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v3/config/features"
@@ -16,7 +17,7 @@ import (
 // in Store.nodesLock
 func (n *Node) applyWeightChanges(ctx context.Context) error {
 	// Recursively calling the children to sum their weights.
-	childrenWeight := uint64(0)
+	childrenWeight := big.NewInt(0)
 	for _, child := range n.children {
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -24,12 +25,12 @@ func (n *Node) applyWeightChanges(ctx context.Context) error {
 		if err := child.applyWeightChanges(ctx); err != nil {
 			return err
 		}
-		childrenWeight += child.weight
+		childrenWeight.Add(childrenWeight, child.weight)
 	}
 	if n.root == params.BeaconConfig().ZeroHash {
 		return nil
 	}
-	n.weight = n.balance + childrenWeight
+	n.weight.Add(n.balance, childrenWeight)
 	return nil
 }
 
@@ -45,7 +46,7 @@ func (n *Node) updateBestDescendant(ctx context.Context, justifiedEpoch, finaliz
 	}
 
 	var bestChild *Node
-	bestWeight := uint64(0)
+	bestWeight := big.NewInt(0)
 	hasViableDescendant := false
 	for _, child := range n.children {
 		if child == nil {
@@ -63,12 +64,12 @@ func (n *Node) updateBestDescendant(ctx context.Context, justifiedEpoch, finaliz
 			hasViableDescendant = true
 		} else if childLeadsToViableHead {
 			// If both are viable, compare their weights.
-			if child.weight == bestWeight {
+			if child.weight.Cmp(bestWeight) == 0 {
 				// Tie-breaker of equal weights by root.
 				if bytes.Compare(child.root[:], bestChild.root[:]) > 0 {
 					bestChild = child
 				}
-			} else if child.weight > bestWeight {
+			} else if child.weight.Cmp(bestWeight) == 1 {
 				bestChild = child
 				bestWeight = child.weight
 			}
@@ -144,8 +145,8 @@ func (n *Node) nodeTreeDump(ctx context.Context, nodes []*v1.ForkChoiceNode) ([]
 		FinalizedEpoch:           n.finalizedEpoch,
 		UnrealizedJustifiedEpoch: n.unrealizedJustifiedEpoch,
 		UnrealizedFinalizedEpoch: n.unrealizedFinalizedEpoch,
-		Balance:                  n.balance,
-		Weight:                   n.weight,
+		Balance:                  n.balance.String(),
+		Weight:                   n.weight.String(),
 		ExecutionOptimistic:      n.optimistic,
 		ExecutionBlockHash:       n.payloadHash[:],
 		Timestamp:                n.timestamp,
@@ -169,18 +170,22 @@ func (n *Node) nodeTreeDump(ctx context.Context, nodes []*v1.ForkChoiceNode) ([]
 
 // VotedFraction returns the fraction of the committee that voted directly for
 // this node.
-func (f *ForkChoice) VotedFraction(root [32]byte) (uint64, error) {
+func (f *ForkChoice) VotedFraction(root [32]byte) (*big.Int, error) {
 	f.store.nodesLock.RLock()
 	defer f.store.nodesLock.RUnlock()
 
 	// Avoid division by zero before a block is inserted.
-	if f.store.committeeBalance == 0 {
-		return 0, nil
+	zero := big.NewInt(0)
+	if f.store.committeeBalance.Cmp(zero) == 0 {
+		return zero, nil
 	}
 
 	node, ok := f.store.nodeByRoot[root]
 	if !ok || node == nil {
-		return 0, ErrNilNode
+		return zero, ErrNilNode
 	}
-	return node.balance * 100 / f.store.committeeBalance, nil
+	result := big.NewInt(100)
+	result.Mul(result, node.balance)
+	result.Div(result, f.store.committeeBalance)
+	return result, nil
 }

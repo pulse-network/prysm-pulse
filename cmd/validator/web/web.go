@@ -6,7 +6,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v3/cmd"
 	"github.com/prysmaticlabs/prysm/v3/cmd/validator/flags"
 	"github.com/prysmaticlabs/prysm/v3/config/features"
-	"github.com/prysmaticlabs/prysm/v3/runtime/tos"
 	"github.com/prysmaticlabs/prysm/v3/validator/rpc"
 	"github.com/urfave/cli/v2"
 )
@@ -24,13 +23,9 @@ var Commands = &cli.Command{
 				flags.WalletDirFlag,
 				flags.GRPCGatewayHost,
 				flags.GRPCGatewayPort,
-				cmd.AcceptTosFlag,
 			}),
 			Before: func(cliCtx *cli.Context) error {
-				if err := cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags); err != nil {
-					return err
-				}
-				return tos.VerifyTosAcceptedOrPrompt(cliCtx)
+				return cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags)
 			},
 			Action: func(cliCtx *cli.Context) error {
 				if err := features.ConfigureValidator(cliCtx); err != nil {

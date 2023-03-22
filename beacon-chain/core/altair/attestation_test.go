@@ -472,7 +472,7 @@ func TestSetParticipationAndRewardProposer(t *testing.T) {
 				headFlagIndex:   false,
 			},
 			wantedParticipation: []byte{3, 3, 3, 3, 0, 0, 0, 0},
-			wantedBalance:       32000090342,
+			wantedBalance:       32000067756, // with 25% pulse burn applied
 		},
 		{name: "all participated with some flags",
 			indices: []uint64{0, 1, 2, 3, 4, 5, 6, 7}, epochParticipation: []byte{0, 0, 0, 0, 0, 0, 0, 0}, participatedFlags: map[uint8]bool{
@@ -481,7 +481,7 @@ func TestSetParticipationAndRewardProposer(t *testing.T) {
 				headFlagIndex:   false,
 			},
 			wantedParticipation: []byte{1, 1, 1, 1, 1, 1, 1, 1},
-			wantedBalance:       32000063240,
+			wantedBalance:       32000047430, // with 25% pulse burn applied
 		},
 		{name: "all participated with all flags",
 			indices: []uint64{0, 1, 2, 3, 4, 5, 6, 7}, epochParticipation: []byte{0, 0, 0, 0, 0, 0, 0, 0}, participatedFlags: map[uint8]bool{
@@ -490,7 +490,7 @@ func TestSetParticipationAndRewardProposer(t *testing.T) {
 				headFlagIndex:   true,
 			},
 			wantedParticipation: []byte{7, 7, 7, 7, 7, 7, 7, 7},
-			wantedBalance:       32000243925,
+			wantedBalance:       32000182943, // with 25% pulse burn applied
 		},
 	}
 	for _, test := range tests {
@@ -512,9 +512,10 @@ func TestSetParticipationAndRewardProposer(t *testing.T) {
 
 			i, err := helpers.BeaconProposerIndex(context.Background(), st)
 			require.NoError(t, err)
-			b, err = beaconState.BalanceAtIndex(i)
+			var bal uint64
+			bal, err = beaconState.BalanceAtIndex(i)
 			require.NoError(t, err)
-			require.Equal(t, test.wantedBalance, b)
+			require.Equal(t, test.wantedBalance, bal)
 
 			if test.epoch == currentEpoch {
 				p, err := beaconState.CurrentEpochParticipation()
@@ -607,10 +608,10 @@ func TestRewardProposer(t *testing.T) {
 		want            uint64
 	}{
 		{rewardNumerator: 1, want: 32000000000},
-		{rewardNumerator: 10000, want: 32000000022},
-		{rewardNumerator: 1000000, want: 32000002254},
-		{rewardNumerator: 1000000000, want: 32002234396},
-		{rewardNumerator: 1000000000000, want: 34234377253},
+		{rewardNumerator: 10000, want: 32000000016},         // with 25% pulse burn applied
+		{rewardNumerator: 1000000, want: 32000001690},       // with 25% pulse burn applied
+		{rewardNumerator: 1000000000, want: 32001675796},    // with 25% pulse burn applied
+		{rewardNumerator: 1000000000000, want: 33675782938}, // with 25% pulse burn applied
 	}
 	for _, test := range tests {
 		require.NoError(t, altair.RewardProposer(context.Background(), beaconState, test.rewardNumerator))

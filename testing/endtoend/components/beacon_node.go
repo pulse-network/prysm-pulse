@@ -212,7 +212,6 @@ func (node *BeaconNode) Start(ctx context.Context) error {
 		fmt.Sprintf("--%s=%d", flags.BlockBatchLimitBurstFactor.Name, 8),
 		"--" + cmdshared.ForceClearDB.Name,
 		"--" + cmdshared.E2EConfigFlag.Name,
-		"--" + cmdshared.AcceptTosFlag.Name,
 		"--" + flags.EnableDebugRPCEndpoints.Name,
 	}
 	if config.UsePprof {

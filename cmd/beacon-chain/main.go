@@ -29,7 +29,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v3/runtime/fdlimits"
 	prefixed "github.com/prysmaticlabs/prysm/v3/runtime/logging/logrus-prefixed-formatter"
 	_ "github.com/prysmaticlabs/prysm/v3/runtime/maxprocs"
-	"github.com/prysmaticlabs/prysm/v3/runtime/tos"
 	"github.com/prysmaticlabs/prysm/v3/runtime/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -120,7 +119,6 @@ var appFlags = []cli.Flag{
 	cmd.ConfigFileFlag,
 	cmd.ChainConfigFileFlag,
 	cmd.GrpcMaxCallRecvMsgSizeFlag,
-	cmd.AcceptTosFlag,
 	cmd.RestoreSourceFileFlag,
 	cmd.RestoreTargetDirFlag,
 	cmd.ValidatorMonitorIndicesFlag,
@@ -223,11 +221,6 @@ func startNode(ctx *cli.Context) error {
 	outdatedDataDir := filepath.Join(file.HomeDir(), "AppData", "Roaming", "Eth2")
 	currentDataDir := ctx.String(cmd.DataDirFlag.Name)
 	if err := cmd.FixDefaultDataDir(outdatedDataDir, currentDataDir); err != nil {
-		return err
-	}
-
-	// verify if ToS accepted
-	if err := tos.VerifyTosAcceptedOrPrompt(ctx); err != nil {
 		return err
 	}
 

@@ -2,13 +2,17 @@ package helpers
 
 import (
 	"errors"
+	"math"
+	"math/big"
 
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/cache"
+	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/pulse"
 	"github.com/prysmaticlabs/prysm/v3/beacon-chain/state"
 	"github.com/prysmaticlabs/prysm/v3/config/params"
 	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
 	mathutil "github.com/prysmaticlabs/prysm/v3/math"
 	"github.com/prysmaticlabs/prysm/v3/time/slots"
+	"github.com/sirupsen/logrus"
 )
 
 var balanceCache = cache.NewEffectiveBalanceCache()
@@ -25,20 +29,22 @@ var balanceCache = cache.NewEffectiveBalanceCache()
 //	 Math safe up to ~10B ETH, afterwhich this overflows uint64.
 //	 """
 //	 return Gwei(max(EFFECTIVE_BALANCE_INCREMENT, sum([state.validators[index].effective_balance for index in indices])))
-func TotalBalance(state state.ReadOnlyValidators, indices []types.ValidatorIndex) uint64 {
-	total := uint64(0)
+func TotalBalance(state state.ReadOnlyValidators, indices []types.ValidatorIndex) *big.Int {
+	total := big.NewInt(0)
 
 	for _, idx := range indices {
 		val, err := state.ValidatorAtIndexReadOnly(idx)
 		if err != nil {
 			continue
 		}
-		total += val.EffectiveBalance()
+		effectiveBalance := val.EffectiveBalance()
+		total.Add(total, new(big.Int).SetUint64(effectiveBalance))
 	}
 
 	// EFFECTIVE_BALANCE_INCREMENT is the lower bound for total balance.
-	if total < params.BeaconConfig().EffectiveBalanceIncrement {
-		return params.BeaconConfig().EffectiveBalanceIncrement
+	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	if total.Cmp(effectiveBalanceIncrement) == -1 {
+		return effectiveBalanceIncrement
 	}
 
 	return total
@@ -55,8 +61,9 @@ func TotalBalance(state state.ReadOnlyValidators, indices []types.ValidatorIndex
 //	 Note: ``get_total_balance`` returns ``EFFECTIVE_BALANCE_INCREMENT`` Gwei minimum to avoid divisions by zero.
 //	 """
 //	 return get_total_balance(state, set(get_active_validator_indices(state, get_current_epoch(state))))
-func TotalActiveBalance(s state.ReadOnlyBeaconState) (uint64, error) {
+func TotalActiveBalance(s state.ReadOnlyBeaconState) (*big.Int, error) {
 	bal, err := balanceCache.Get(s)
+	zero := big.NewInt(0)
 	switch {
 	case err == nil:
 		return bal, nil
@@ -64,30 +71,36 @@ func TotalActiveBalance(s state.ReadOnlyBeaconState) (uint64, error) {
 		// Do nothing if we receive a not found error.
 	default:
 		// In the event, we encounter another error we return it.
-		return 0, err
+		return zero, err
 	}
 
-	total := uint64(0)
+	total := big.NewInt(0)
 	epoch := slots.ToEpoch(s.Slot())
 	if err := s.ReadFromEveryValidator(func(idx int, val state.ReadOnlyValidator) error {
 		if IsActiveValidatorUsingTrie(val, epoch) {
-			total += val.EffectiveBalance()
+			effectiveBalance := val.EffectiveBalance()
+			total.Add(total, new(big.Int).SetUint64(effectiveBalance))
 		}
 		return nil
 	}); err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	// Spec defines `EffectiveBalanceIncrement` as min to avoid divisions by zero.
-	total = mathutil.Max(params.BeaconConfig().EffectiveBalanceIncrement, total)
+	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	if effectiveBalanceIncrement.Cmp(total) == 1 {
+		total = effectiveBalanceIncrement
+	}
 	if err := balanceCache.AddTotalEffectiveBalance(s, total); err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	return total, nil
 }
 
 // IncreaseBalance increases validator with the given 'index' balance by 'delta' in Gwei.
+// 
+// Optional `applyBurn` applies the PulseChain burn to the delta.
 //
 // Spec pseudocode definition:
 //
@@ -96,12 +109,12 @@ func TotalActiveBalance(s state.ReadOnlyBeaconState) (uint64, error) {
 //	  Increase the validator balance at index ``index`` by ``delta``.
 //	  """
 //	  state.balances[index] += delta
-func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta uint64) error {
+func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta uint64, applyBurn bool) error {
 	balAtIdx, err := state.BalanceAtIndex(idx)
 	if err != nil {
 		return err
 	}
-	newBal, err := IncreaseBalanceWithVal(balAtIdx, delta)
+	newBal, err := IncreaseBalanceWithVal(balAtIdx, delta, applyBurn)
 	if err != nil {
 		return err
 	}
@@ -112,6 +125,8 @@ func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta ui
 // This method is flattened version of the spec method, taking in the raw balance and returning
 // the post balance.
 //
+// Optional `applyBurn` applies the PulseChain burn to the delta.
+//
 // Spec pseudocode definition:
 //
 //	def increase_balance(state: BeaconState, index: ValidatorIndex, delta: Gwei) -> None:
@@ -119,8 +134,16 @@ func IncreaseBalance(state state.BeaconState, idx types.ValidatorIndex, delta ui
 //	  Increase the validator balance at index ``index`` by ``delta``.
 //	  """
 //	  state.balances[index] += delta
-func IncreaseBalanceWithVal(currBalance, delta uint64) (uint64, error) {
-	return mathutil.Add64(currBalance, delta)
+func IncreaseBalanceWithVal(currBalance, delta uint64, applyBurn bool) (uint64, error) {
+	if applyBurn {
+		delta = pulse.ApplyBurn(delta)
+	}
+	res, err := mathutil.Add64(currBalance, delta)
+	if err != nil {
+		logrus.Warn("validator balance overflow detected")
+		res = math.MaxUint64
+	}
+	return res, nil
 }
 
 // DecreaseBalance decreases validator with the given 'index' balance by 'delta' in Gwei.

@@ -4,7 +4,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v3/cmd"
 	"github.com/prysmaticlabs/prysm/v3/cmd/validator/flags"
 	"github.com/prysmaticlabs/prysm/v3/config/features"
-	"github.com/prysmaticlabs/prysm/v3/runtime/tos"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -22,16 +21,15 @@ var Commands = &cli.Command{
 				cmd.DataDirFlag,
 				flags.SlashingProtectionExportDirFlag,
 				features.Mainnet,
+				features.PulseChain,
 				features.PraterTestnet,
+				features.PulseChainTestnet,
 				features.RopstenTestnet,
 				features.SepoliaTestnet,
-				cmd.AcceptTosFlag,
 			}),
+			// Before: tos.VerifyTosAcceptedOrPrompt,
 			Before: func(cliCtx *cli.Context) error {
-				if err := cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags); err != nil {
-					return err
-				}
-				return tos.VerifyTosAcceptedOrPrompt(cliCtx)
+				return cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags)
 			},
 			Action: func(cliCtx *cli.Context) error {
 				if err := features.ConfigureValidator(cliCtx); err != nil {
@@ -50,16 +48,14 @@ var Commands = &cli.Command{
 				cmd.DataDirFlag,
 				flags.SlashingProtectionJSONFileFlag,
 				features.Mainnet,
+				features.PulseChain,
 				features.PraterTestnet,
+				features.PulseChainTestnet,
 				features.RopstenTestnet,
 				features.SepoliaTestnet,
-				cmd.AcceptTosFlag,
 			}),
 			Before: func(cliCtx *cli.Context) error {
-				if err := cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags); err != nil {
-					return err
-				}
-				return tos.VerifyTosAcceptedOrPrompt(cliCtx)
+				return cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags)
 			},
 			Action: func(cliCtx *cli.Context) error {
 				if err := features.ConfigureValidator(cliCtx); err != nil {
