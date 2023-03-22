@@ -7,6 +7,7 @@ package epoch
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -56,10 +57,10 @@ func (s sortableIndices) Less(i, j int) bool {
 //	  Note: ``get_total_balance`` returns ``EFFECTIVE_BALANCE_INCREMENT`` Gwei minimum to avoid divisions by zero.
 //	  """
 //	  return get_total_balance(state, get_unslashed_attesting_indices(state, attestations))
-func AttestingBalance(ctx context.Context, state state.ReadOnlyBeaconState, atts []*ethpb.PendingAttestation) (uint64, error) {
+func AttestingBalance(ctx context.Context, state state.ReadOnlyBeaconState, atts []*ethpb.PendingAttestation) (*big.Int, error) {
 	indices, err := UnslashedAttestingIndices(ctx, state, atts)
 	if err != nil {
-		return 0, errors.Wrap(err, "could not get attesting indices")
+		return big.NewInt(0), errors.Wrap(err, "could not get attesting indices")
 	}
 	return helpers.TotalBalance(state, indices), nil
 }
@@ -189,14 +190,23 @@ func ProcessSlashings(state state.BeaconState, slashingMultiplier uint64) (state
 
 	// a callback is used here to apply the following actions to all validators
 	// below equally.
-	increment := params.BeaconConfig().EffectiveBalanceIncrement
-	minSlashing := math.Min(totalSlashing*slashingMultiplier, totalBalance)
+	increment := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
+	totalSlashingTimesMultiplier := new(big.Int).SetUint64(totalSlashing * slashingMultiplier)
+	minSlashing := totalBalance
+	if totalSlashingTimesMultiplier.Cmp(totalBalance) == -1 {
+		minSlashing = totalSlashingTimesMultiplier
+	} else {
+		minSlashing = totalBalance
+	}
 	err = state.ApplyToEveryValidator(func(idx int, val *ethpb.Validator) (bool, *ethpb.Validator, error) {
 		correctEpoch := (currentEpoch + exitLength/2) == val.WithdrawableEpoch
 		if val.Slashed && correctEpoch {
-			penaltyNumerator := val.EffectiveBalance / increment * minSlashing
-			penalty := penaltyNumerator / totalBalance * increment
-			if err := helpers.DecreaseBalance(state, types.ValidatorIndex(idx), penalty); err != nil {
+			penalty := new(big.Int).SetUint64(val.EffectiveBalance) // val.EffectiveBalance
+			penalty.Div(penalty, increment)                         // val.EffectiveBalance / increment
+			penalty.Mul(penalty, minSlashing)                       // penaltyNumerator = val.EffectiveBalance / increment * minSlashing
+			penalty.Div(penalty, totalBalance)                      // penaltyNumerator / totalBalance
+			penalty = penalty.Mul(penalty, increment)               // penalty = penaltyNumerator / totalBalance * increment
+			if err := helpers.DecreaseBalance(state, types.ValidatorIndex(idx), penalty.Uint64()); err != nil {
 				return false, val, err
 			}
 			return true, val, nil

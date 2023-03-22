@@ -3,6 +3,7 @@ package doublylinkedtree
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/pkg/errors"
@@ -37,6 +38,7 @@ func New() *ForkChoice {
 		nodeByPayload:                 make(map[[fieldparams.RootLength]byte]*Node),
 		slashedIndices:                make(map[types.ValidatorIndex]bool),
 		receivedBlocksLastEpoch:       [fieldparams.SlotsPerEpoch]types.Slot{},
+		committeeBalance:              big.NewInt(0),
 	}
 
 	b := make([]uint64, 0)
@@ -316,19 +318,19 @@ func (f *ForkChoice) updateBalances(newBalances []uint64) error {
 			continue
 		}
 
-		oldBalance := uint64(0)
-		newBalance := uint64(0)
+		oldBalance := big.NewInt(0)
+		newBalance := big.NewInt(0)
 		// If the validator index did not exist in `f.balances` or
 		// `newBalances` list above, the balance is just 0.
 		if index < len(f.balances) {
-			oldBalance = f.balances[index]
+			oldBalance = new(big.Int).SetUint64(f.balances[index])
 		}
 		if index < len(newBalances) {
-			newBalance = newBalances[index]
+			newBalance = new(big.Int).SetUint64(newBalances[index])
 		}
 
 		// Update only if the validator's balance or vote has changed.
-		if vote.currentRoot != vote.nextRoot || oldBalance != newBalance {
+		if vote.currentRoot != vote.nextRoot || oldBalance.Cmp(newBalance) != 0 {
 			// Ignore the vote if the root is not in fork choice
 			// store, that means we have not seen the block before.
 			nextNode, ok := f.store.nodeByRoot[vote.nextRoot]
@@ -337,7 +339,7 @@ func (f *ForkChoice) updateBalances(newBalances []uint64) error {
 				if nextNode == nil {
 					return errors.Wrap(ErrNilNode, "could not update balances")
 				}
-				nextNode.balance += newBalance
+				nextNode.balance.Add(nextNode.balance, newBalance)
 			}
 
 			currentNode, ok := f.store.nodeByRoot[vote.currentRoot]
@@ -346,7 +348,7 @@ func (f *ForkChoice) updateBalances(newBalances []uint64) error {
 				if currentNode == nil {
 					return errors.Wrap(ErrNilNode, "could not update balances")
 				}
-				if currentNode.balance < oldBalance {
+				if currentNode.balance.Cmp(oldBalance) == -1 {
 					f.store.proposerBoostLock.RLock()
 					log.WithFields(logrus.Fields{
 						"nodeRoot":                   fmt.Sprintf("%#x", bytesutil.Trunc(vote.currentRoot[:])),
@@ -358,9 +360,9 @@ func (f *ForkChoice) updateBalances(newBalances []uint64) error {
 						"previousProposerBoostScore": f.store.previousProposerBoostScore,
 					}).Warning("node with invalid balance, setting it to zero")
 					f.store.proposerBoostLock.RUnlock()
-					currentNode.balance = 0
+					currentNode.balance = big.NewInt(0)
 				} else {
-					currentNode.balance -= oldBalance
+					currentNode.balance.Sub(currentNode.balance, oldBalance)
 				}
 			}
 		}
@@ -457,10 +459,10 @@ func (f *ForkChoice) InsertSlashedIndex(_ context.Context, index types.Validator
 		return
 	}
 
-	if node.balance < f.balances[index] {
-		node.balance = 0
+	if node.balance.Cmp(new(big.Int).SetUint64(f.balances[index])) == -1 {
+		node.balance = big.NewInt(0)
 	} else {
-		node.balance -= f.balances[index]
+		node.balance.Sub(node.balance, new(big.Int).SetUint64(f.balances[index]))
 	}
 }
 

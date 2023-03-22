@@ -1,6 +1,10 @@
 package precompute
 
-import types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
+import (
+	"math/big"
+
+	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
+)
 
 // Validator stores the pre computation of individual validator's attesting records these records
 // consist of attestation votes, block inclusion record. Pre computing and storing such record
@@ -48,20 +52,20 @@ type Validator struct {
 // Pre computing and storing such record is essential for process epoch optimizations.
 type Balance struct {
 	// ActiveCurrentEpoch is the total effective balance of all active validators during current epoch.
-	ActiveCurrentEpoch uint64
+	ActiveCurrentEpoch *big.Int
 	// ActivePrevEpoch is the total effective balance of all active validators during prev epoch.
-	ActivePrevEpoch uint64
+	ActivePrevEpoch *big.Int
 	// CurrentEpochAttested is the total effective balance of all validators who attested during current epoch.
-	CurrentEpochAttested uint64
+	CurrentEpochAttested *big.Int
 	// CurrentEpochTargetAttested is the total effective balance of all validators who attested
 	// for epoch boundary block during current epoch.
-	CurrentEpochTargetAttested uint64
+	CurrentEpochTargetAttested *big.Int
 	// PrevEpochAttested is the total effective balance of all validators who attested during prev epoch.
-	PrevEpochAttested uint64
+	PrevEpochAttested *big.Int
 	// PrevEpochTargetAttested is the total effective balance of all validators who attested
 	// for epoch boundary block during prev epoch.
-	PrevEpochTargetAttested uint64
+	PrevEpochTargetAttested *big.Int
 	// PrevEpochHeadAttested is the total effective balance of all validators who attested
 	// correctly for head block during prev epoch.
-	PrevEpochHeadAttested uint64
+	PrevEpochHeadAttested *big.Int
 }

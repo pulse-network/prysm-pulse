@@ -1,6 +1,6 @@
-# Prysm Client Interoperability Guide
+# Prysm-Pulse Client Interoperability Guide
 
-This README details how to setup Prysm for interop testing for usage with other Ethereum consensus clients.
+This README details how to setup Prysm-Pulse for interop testing for usage with other Ethereum or PulseChain consensus clients.
 
 ## Installation & Setup
 

@@ -219,7 +219,6 @@ func (v *ValidatorNode) Start(ctx context.Context) error {
 		fmt.Sprintf("--%s=%s", flags.ProposerSettingsFlag.Name, proposerSettingsPathPath),
 		"--" + cmdshared.ForceClearDB.Name,
 		"--" + cmdshared.E2EConfigFlag.Name,
-		"--" + cmdshared.AcceptTosFlag.Name,
 	}
 	// Only apply e2e flags to the current branch. New flags may not exist in previous release.
 	if !v.config.UsePrysmShValidator {

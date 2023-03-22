@@ -25,7 +25,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v3/runtime/debug"
 	prefixed "github.com/prysmaticlabs/prysm/v3/runtime/logging/logrus-prefixed-formatter"
 	_ "github.com/prysmaticlabs/prysm/v3/runtime/maxprocs"
-	"github.com/prysmaticlabs/prysm/v3/runtime/tos"
 	"github.com/prysmaticlabs/prysm/v3/runtime/version"
 	"github.com/prysmaticlabs/prysm/v3/validator/node"
 	"github.com/sirupsen/logrus"
@@ -33,11 +32,6 @@ import (
 )
 
 func startNode(ctx *cli.Context) error {
-	// verify if ToS accepted
-	if err := tos.VerifyTosAcceptedOrPrompt(ctx); err != nil {
-		return err
-	}
-
 	validatorClient, err := node.NewValidatorClient(ctx)
 	if err != nil {
 		return err
@@ -108,7 +102,6 @@ var appFlags = []cli.Flag{
 	debug.TraceFlag,
 	debug.BlockProfileRateFlag,
 	debug.MutexProfileFractionFlag,
-	cmd.AcceptTosFlag,
 }
 
 func init() {

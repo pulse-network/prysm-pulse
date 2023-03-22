@@ -3,6 +3,7 @@ package beacon
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sort"
 	"strconv"
 
@@ -541,21 +542,36 @@ func (bs *Server) GetValidatorParticipation(
 		return nil, status.Errorf(codes.Internal, "Invalid state type retrieved with a version of %d", beaconState.Version())
 	}
 	cp := bs.FinalizationFetcher.FinalizedCheckpt()
+	var globalParticipationRate float32
+	zero := big.NewInt(0)
+	if b.PrevEpochTargetAttested.Cmp(zero) == 1 || b.ActivePrevEpoch.Cmp(zero) == 1 {
+		prevEpochTargetAttested, f1 := new(big.Float).SetString(b.PrevEpochTargetAttested.String())
+		if !f1 {
+			globalParticipationRate = float32(0)
+		}
+		activePrevEpoch, f2 := new(big.Float).SetString(b.ActivePrevEpoch.String())
+		if !f2 {
+			globalParticipationRate = float32(0)
+		}
+		if f1 && f2 {
+			globalParticipationRate, _ = new(big.Float).Quo(prevEpochTargetAttested, activePrevEpoch).Float32()
+		}
+	}
 	p := &ethpb.ValidatorParticipationResponse{
 		Epoch:     requestedEpoch,
 		Finalized: requestedEpoch <= cp.Epoch,
 		Participation: &ethpb.ValidatorParticipation{
 			// TODO(7130): Remove these three deprecated fields.
-			GlobalParticipationRate:          float32(b.PrevEpochTargetAttested) / float32(b.ActivePrevEpoch),
-			VotedEther:                       b.PrevEpochTargetAttested,
-			EligibleEther:                    b.ActivePrevEpoch,
-			CurrentEpochActiveGwei:           b.ActiveCurrentEpoch,
-			CurrentEpochAttestingGwei:        b.CurrentEpochAttested,
-			CurrentEpochTargetAttestingGwei:  b.CurrentEpochTargetAttested,
-			PreviousEpochActiveGwei:          b.ActivePrevEpoch,
-			PreviousEpochAttestingGwei:       b.PrevEpochAttested,
-			PreviousEpochTargetAttestingGwei: b.PrevEpochTargetAttested,
-			PreviousEpochHeadAttestingGwei:   b.PrevEpochHeadAttested,
+			GlobalParticipationRate:          globalParticipationRate,
+			VotedEther:                       b.PrevEpochTargetAttested.String(),
+			EligibleEther:                    b.ActivePrevEpoch.String(),
+			CurrentEpochActiveGwei:           b.ActiveCurrentEpoch.String(),
+			CurrentEpochAttestingGwei:        b.CurrentEpochAttested.String(),
+			CurrentEpochTargetAttestingGwei:  b.CurrentEpochTargetAttested.String(),
+			PreviousEpochActiveGwei:          b.ActivePrevEpoch.String(),
+			PreviousEpochAttestingGwei:       b.PrevEpochAttested.String(),
+			PreviousEpochTargetAttestingGwei: b.PrevEpochTargetAttested.String(),
+			PreviousEpochHeadAttestingGwei:   b.PrevEpochHeadAttested.String(),
 		},
 	}
 

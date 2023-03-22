@@ -3,6 +3,7 @@ package doublylinkedtree
 import (
 	"context"
 	"encoding/binary"
+	"math/big"
 	"testing"
 	"time"
 
@@ -84,9 +85,9 @@ func TestForkChoice_UpdateBalancesPositiveChange(t *testing.T) {
 	// they get propagated back.
 	require.NoError(t, f.updateBalances([]uint64{10, 20, 30}))
 	s := f.store
-	assert.Equal(t, uint64(10), s.nodeByRoot[indexToHash(1)].balance)
-	assert.Equal(t, uint64(20), s.nodeByRoot[indexToHash(2)].balance)
-	assert.Equal(t, uint64(30), s.nodeByRoot[indexToHash(3)].balance)
+	assert.Equal(t, uint64(10), s.nodeByRoot[indexToHash(1)].balance.Uint64())
+	assert.Equal(t, uint64(20), s.nodeByRoot[indexToHash(2)].balance.Uint64())
+	assert.Equal(t, uint64(30), s.nodeByRoot[indexToHash(3)].balance.Uint64())
 }
 
 func TestForkChoice_UpdateBalancesNegativeChange(t *testing.T) {
@@ -102,9 +103,9 @@ func TestForkChoice_UpdateBalancesNegativeChange(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.InsertNode(ctx, st, blkRoot))
 	s := f.store
-	s.nodeByRoot[indexToHash(1)].balance = 100
-	s.nodeByRoot[indexToHash(2)].balance = 100
-	s.nodeByRoot[indexToHash(3)].balance = 100
+	s.nodeByRoot[indexToHash(1)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(2)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(3)].balance = big.NewInt(100)
 
 	f.balances = []uint64{100, 100, 100}
 	f.votes = []Vote{
@@ -114,9 +115,9 @@ func TestForkChoice_UpdateBalancesNegativeChange(t *testing.T) {
 	}
 
 	require.NoError(t, f.updateBalances([]uint64{10, 20, 30}))
-	assert.Equal(t, uint64(10), s.nodeByRoot[indexToHash(1)].balance)
-	assert.Equal(t, uint64(20), s.nodeByRoot[indexToHash(2)].balance)
-	assert.Equal(t, uint64(30), s.nodeByRoot[indexToHash(3)].balance)
+	assert.Equal(t, uint64(10), s.nodeByRoot[indexToHash(1)].balance.Uint64())
+	assert.Equal(t, uint64(20), s.nodeByRoot[indexToHash(2)].balance.Uint64())
+	assert.Equal(t, uint64(30), s.nodeByRoot[indexToHash(3)].balance.Uint64())
 }
 
 func TestForkChoice_UpdateBalancesUnderflow(t *testing.T) {
@@ -132,9 +133,9 @@ func TestForkChoice_UpdateBalancesUnderflow(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.InsertNode(ctx, st, blkRoot))
 	s := f.store
-	s.nodeByRoot[indexToHash(1)].balance = 100
-	s.nodeByRoot[indexToHash(2)].balance = 100
-	s.nodeByRoot[indexToHash(3)].balance = 100
+	s.nodeByRoot[indexToHash(1)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(2)].balance = big.NewInt(100)
+	s.nodeByRoot[indexToHash(3)].balance = big.NewInt(100)
 
 	f.balances = []uint64{125, 125, 125}
 	f.votes = []Vote{
@@ -144,9 +145,9 @@ func TestForkChoice_UpdateBalancesUnderflow(t *testing.T) {
 	}
 
 	require.NoError(t, f.updateBalances([]uint64{10, 20, 30}))
-	assert.Equal(t, uint64(0), s.nodeByRoot[indexToHash(1)].balance)
-	assert.Equal(t, uint64(0), s.nodeByRoot[indexToHash(2)].balance)
-	assert.Equal(t, uint64(5), s.nodeByRoot[indexToHash(3)].balance)
+	assert.Equal(t, uint64(0), s.nodeByRoot[indexToHash(1)].balance.Uint64())
+	assert.Equal(t, uint64(0), s.nodeByRoot[indexToHash(2)].balance.Uint64())
+	assert.Equal(t, uint64(5), s.nodeByRoot[indexToHash(3)].balance.Uint64())
 }
 
 func TestForkChoice_IsCanonical(t *testing.T) {
@@ -203,10 +204,10 @@ func TestForkChoice_IsCanonicalReorg(t *testing.T) {
 	require.NoError(t, f.InsertNode(ctx, st, blkRoot))
 
 	f.store.nodesLock.Lock()
-	f.store.nodeByRoot[[32]byte{'3'}].balance = 10
+	f.store.nodeByRoot[[32]byte{'3'}].balance = big.NewInt(10)
 	require.NoError(t, f.store.treeRootNode.applyWeightChanges(ctx))
-	require.Equal(t, uint64(10), f.store.nodeByRoot[[32]byte{'1'}].weight)
-	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'2'}].weight)
+	require.Equal(t, uint64(10), f.store.nodeByRoot[[32]byte{'1'}].weight.Uint64())
+	require.Equal(t, uint64(0), f.store.nodeByRoot[[32]byte{'2'}].weight.Uint64())
 
 	require.NoError(t, f.store.treeRootNode.updateBestDescendant(ctx, 1, 1, 1))
 	require.DeepEqual(t, [32]byte{'3'}, f.store.treeRootNode.bestDescendant.root)
@@ -321,19 +322,19 @@ func TestForkChoice_RemoveEquivocating(t *testing.T) {
 
 	// Process b's slashing, c is now head
 	f.InsertSlashedIndex(ctx, 1)
-	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].balance)
+	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].balance.Uint64())
 	head, err = f.Head(ctx, []uint64{100, 200, 200, 300})
-	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].weight)
-	require.Equal(t, uint64(300), f.store.nodeByRoot[[32]byte{'c'}].weight)
+	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].weight.Uint64())
+	require.Equal(t, uint64(300), f.store.nodeByRoot[[32]byte{'c'}].weight.Uint64())
 	require.NoError(t, err)
 	require.Equal(t, [32]byte{'c'}, head)
 
 	// Process b's slashing again, should be a noop
 	f.InsertSlashedIndex(ctx, 1)
-	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].balance)
+	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].balance.Uint64())
 	head, err = f.Head(ctx, []uint64{100, 200, 200, 300})
-	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].weight)
-	require.Equal(t, uint64(300), f.store.nodeByRoot[[32]byte{'c'}].weight)
+	require.Equal(t, uint64(200), f.store.nodeByRoot[[32]byte{'b'}].weight.Uint64())
+	require.Equal(t, uint64(300), f.store.nodeByRoot[[32]byte{'c'}].weight.Uint64())
 	require.NoError(t, err)
 	require.Equal(t, [32]byte{'c'}, head)
 

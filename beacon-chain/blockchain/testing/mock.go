@@ -5,6 +5,7 @@ package testing
 import (
 	"bytes"
 	"context"
+	"math/big"
 	"sync"
 	"time"
 
@@ -346,7 +347,7 @@ func (s *ChainService) CurrentSlot() types.Slot {
 }
 
 // Participation mocks the same method in the chain service.
-func (s *ChainService) Participation(_ uint64) *precompute.Balance {
+func (s *ChainService) Participation(_ *big.Int) *precompute.Balance {
 	return s.Balance
 }
 

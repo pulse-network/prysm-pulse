@@ -8,9 +8,6 @@ package eth
 
 import (
 	context "context"
-	reflect "reflect"
-	sync "sync"
-
 	empty "github.com/golang/protobuf/ptypes/empty"
 	github_com_prysmaticlabs_prysm_v3_consensus_types_primitives "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
 	_ "github.com/prysmaticlabs/prysm/v3/proto/eth/ext"
@@ -20,6 +17,8 @@ import (
 	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -186,6 +185,7 @@ type BeaconStateRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to QueryFilter:
+	//
 	//	*BeaconStateRequest_Slot
 	//	*BeaconStateRequest_BlockRoot
 	QueryFilter isBeaconStateRequest_QueryFilter `protobuf_oneof:"query_filter"`

@@ -23,7 +23,7 @@ func TestTotalBalance_OK(t *testing.T) {
 	balance := TotalBalance(state, []types.ValidatorIndex{0, 1, 2, 3})
 	wanted := state.Validators()[0].EffectiveBalance + state.Validators()[1].EffectiveBalance +
 		state.Validators()[2].EffectiveBalance + state.Validators()[3].EffectiveBalance
-	assert.Equal(t, wanted, balance, "Incorrect TotalBalance")
+	assert.Equal(t, wanted, balance.Uint64(), "Incorrect TotalBalance")
 }
 
 func TestTotalBalance_ReturnsEffectiveBalanceIncrement(t *testing.T) {
@@ -32,7 +32,7 @@ func TestTotalBalance_ReturnsEffectiveBalanceIncrement(t *testing.T) {
 
 	balance := TotalBalance(state, []types.ValidatorIndex{})
 	wanted := params.BeaconConfig().EffectiveBalanceIncrement
-	assert.Equal(t, wanted, balance, "Incorrect TotalBalance")
+	assert.Equal(t, wanted, balance.Uint64(), "Incorrect TotalBalance")
 }
 
 func TestGetBalance_OK(t *testing.T) {
@@ -70,11 +70,12 @@ func TestTotalActiveBalance(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, uint64(test.vCount)*params.BeaconConfig().MaxEffectiveBalance, bal)
+		require.Equal(t, uint64(test.vCount)*params.BeaconConfig().MaxEffectiveBalance, bal.Uint64())
 	}
 }
 
 func TestTotalActiveBal_ReturnMin(t *testing.T) {
+	ClearCache()
 	tests := []struct {
 		vCount int
 	}{
@@ -91,11 +92,12 @@ func TestTotalActiveBal_ReturnMin(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, params.BeaconConfig().EffectiveBalanceIncrement, bal)
+		require.Equal(t, params.BeaconConfig().EffectiveBalanceIncrement, bal.Uint64())
 	}
 }
 
 func TestTotalActiveBalance_WithCache(t *testing.T) {
+	ClearCache()
 	tests := []struct {
 		vCount    int
 		wantCount int
@@ -113,7 +115,7 @@ func TestTotalActiveBalance_WithCache(t *testing.T) {
 		require.NoError(t, err)
 		bal, err := TotalActiveBalance(state)
 		require.NoError(t, err)
-		require.Equal(t, uint64(test.wantCount)*params.BeaconConfig().MaxEffectiveBalance, bal)
+		require.Equal(t, uint64(test.wantCount)*params.BeaconConfig().MaxEffectiveBalance, bal.Uint64())
 	}
 }
 
@@ -135,7 +137,30 @@ func TestIncreaseBalance_OK(t *testing.T) {
 			Balances: test.b,
 		})
 		require.NoError(t, err)
-		require.NoError(t, IncreaseBalance(state, test.i, test.nb))
+		require.NoError(t, IncreaseBalance(state, test.i, test.nb, false))
+		assert.Equal(t, test.eb, state.Balances()[test.i], "Incorrect Validator balance")
+	}
+}
+
+func TestIncreaseBalanceWithBurn_OK(t *testing.T) {
+	tests := []struct {
+		i  types.ValidatorIndex
+		b  []uint64
+		nb uint64
+		eb uint64
+	}{
+		{i: 0, b: []uint64{27 * 1e9, 28 * 1e9, 32 * 1e9}, nb: 100, eb: 27*1e9 + 75},
+		{i: 1, b: []uint64{27 * 1e9, 28 * 1e9, 32 * 1e9}, nb: 0, eb: 28 * 1e9},
+		{i: 2, b: []uint64{27 * 1e9, 28 * 1e9, 32 * 1e9}, nb: 33 * 1e9, eb: 32*1e9 + (33 * 1e9 * 3 / 4)},
+	}
+	for _, test := range tests {
+		state, err := state_native.InitializeFromProtoPhase0(&ethpb.BeaconState{
+			Validators: []*ethpb.Validator{
+				{EffectiveBalance: 4}, {EffectiveBalance: 4}, {EffectiveBalance: 4}},
+			Balances: test.b,
+		})
+		require.NoError(t, err)
+		require.NoError(t, IncreaseBalance(state, test.i, test.nb, true))
 		assert.Equal(t, test.eb, state.Balances()[test.i], "Incorrect Validator balance")
 	}
 }
@@ -255,7 +280,7 @@ func buildState(slot types.Slot, validatorCount uint64) *ethpb.BeaconState {
 	}
 }
 
-func TestIncreaseBadBalance_NotOK(t *testing.T) {
+func TestIncreaseBalance_OverflowCapped(t *testing.T) {
 	tests := []struct {
 		i  types.ValidatorIndex
 		b  []uint64
@@ -271,6 +296,9 @@ func TestIncreaseBadBalance_NotOK(t *testing.T) {
 			Balances: test.b,
 		})
 		require.NoError(t, err)
-		require.ErrorContains(t, "addition overflows", IncreaseBalance(state, test.i, test.nb))
+		require.NoError(t, IncreaseBalance(state, test.i, test.nb, false))
+		for _, bal := range state.Balances() {
+			require.Equal(t, bal, uint64(math.MaxUint64))
+		}
 	}
 }
