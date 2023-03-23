@@ -1,7 +1,7 @@
 package params
 
-// UsePulseChainTestnetNetworkConfig uses the PulseChain beacon chain testnet network config.
-func UsePulseChainTestnetNetworkConfig() {
+// UsePulseChainTestnetV3NetworkConfig uses the PulseChain beacon chain testnet network config.
+func UsePulseChainTestnetV3NetworkConfig() {
 	cfg := BeaconNetworkConfig().Copy()
 	cfg.ContractDeploymentBlock = 16492700
 	cfg.BootstrapNodes = []string{
@@ -12,10 +12,10 @@ func UsePulseChainTestnetNetworkConfig() {
 	OverrideBeaconNetworkConfig(cfg)
 }
 
-// PulseChainTestnetConfig defines the config for the PulseChain beacon chain testnet.
-func PulseChainTestnetConfig() *BeaconChainConfig {
+// PulseChainTestnetV3Config defines the config for the PulseChain beacon chain testnet.
+func PulseChainTestnetV3Config() *BeaconChainConfig {
 	cfg := MainnetConfig().Copy()
-	cfg.ConfigName = PulseChainTestnetName
+	cfg.ConfigName = PulseChainTestnetV3Name
 	cfg.TerminalTotalDifficulty = "58750003716598352947541"
 	cfg.MinGenesisActiveValidatorCount = 4096
 	cfg.MinGenesisTime = 1674864000

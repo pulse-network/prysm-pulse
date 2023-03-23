@@ -28,7 +28,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnet,
+				features.PulseChainTestnetV3,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
@@ -62,7 +62,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnet,
+				features.PulseChainTestnetV3,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
@@ -93,7 +93,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnet,
+				features.PulseChainTestnetV3,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
@@ -121,7 +121,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnet,
+				features.PulseChainTestnetV3,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
@@ -161,7 +161,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnet,
+				features.PulseChainTestnetV3,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
