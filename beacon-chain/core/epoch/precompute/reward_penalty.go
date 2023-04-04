@@ -73,22 +73,27 @@ func AttestationsDelta(state state.ReadOnlyBeaconState, pBal *Balance, vp []*Val
 	prevEpoch := time.PrevEpoch(state)
 	finalizedEpoch := state.FinalizedCheckpointEpoch()
 
-	sqrtActiveCurrentEpoch := new(big.Int).Sqrt(pBal.ActiveCurrentEpoch).Uint64()
+	sqrtActiveCurrentEpoch := new(big.Int).Sqrt(pBal.ActiveCurrentEpoch)
 	for i, v := range vp {
 		rewards[i], penalties[i] = attestationDelta(pBal, sqrtActiveCurrentEpoch, v, prevEpoch, finalizedEpoch)
 	}
 	return rewards, penalties, nil
 }
 
-func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator, prevEpoch, finalizedEpoch types.Epoch) (uint64, uint64) {
+func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch *big.Int, v *Validator, prevEpoch, finalizedEpoch types.Epoch) (uint64, uint64) {
 	if !EligibleForRewards(v) || pBal.ActiveCurrentEpoch.Cmp(big.NewInt(0)) != 1 {
 		return 0, 0
 	}
 
 	baseRewardsPerEpoch := params.BeaconConfig().BaseRewardsPerEpoch
 	effectiveBalanceIncrement := new(big.Int).SetUint64(params.BeaconConfig().EffectiveBalanceIncrement)
-	vb := v.CurrentEpochEffectiveBalance
-	br := vb * params.BeaconConfig().BaseRewardFactor / sqrtActiveCurrentEpoch / baseRewardsPerEpoch
+	vb := new(big.Int).SetUint64(v.CurrentEpochEffectiveBalance)
+
+	// br := vb * params.BeaconConfig().BaseRewardFactor / sqrtActiveCurrentEpoch / baseRewardsPerEpoch
+	baseReward := new(big.Int).Mul(vb, new(big.Int).SetUint64(params.BeaconConfig().BaseRewardFactor))
+	baseReward.Div(baseReward, sqrtActiveCurrentEpoch)
+	br := baseReward.Uint64() / baseRewardsPerEpoch
+
 	r, p := uint64(0), uint64(0)
 	currentEpochBalance := new(big.Int).Div(pBal.ActiveCurrentEpoch, effectiveBalanceIncrement).Uint64()
 
@@ -149,7 +154,7 @@ func attestationDelta(pBal *Balance, sqrtActiveCurrentEpoch uint64, v *Validator
 		// `index not in get_unslashed_attesting_indices(state, matching_target_attestations)`
 		if !v.IsPrevEpochTargetAttester || v.IsSlashed {
 			finalityDelay := helpers.FinalityDelay(prevEpoch, finalizedEpoch)
-			p += vb * uint64(finalityDelay) / params.BeaconConfig().InactivityPenaltyQuotient
+			p += vb.Uint64() * uint64(finalityDelay) / params.BeaconConfig().InactivityPenaltyQuotient
 		}
 	}
 	return r, p
@@ -162,14 +167,14 @@ func ProposersDelta(state state.ReadOnlyBeaconState, pBal *Balance, vp []*Valida
 	rewards := make([]uint64, numofVals)
 
 	totalBalance := pBal.ActiveCurrentEpoch
-	balanceSqrt := new(big.Int).Sqrt(totalBalance).Uint64()
+	balanceSqrt := new(big.Int).Sqrt(totalBalance)
 	// Balance square root cannot be 0, this prevents division by 0.
-	if balanceSqrt == 0 {
-		balanceSqrt = 1
+	if balanceSqrt.Cmp(big.NewInt(0)) == 0 {
+		balanceSqrt = balanceSqrt.SetUint64(1)
 	}
 
-	baseRewardFactor := params.BeaconConfig().BaseRewardFactor
-	baseRewardsPerEpoch := params.BeaconConfig().BaseRewardsPerEpoch
+	baseRewardFactor := new(big.Int).SetUint64(params.BeaconConfig().BaseRewardFactor)
+	baseRewardsPerEpoch := new(big.Int).SetUint64(params.BeaconConfig().BaseRewardsPerEpoch)
 	proposerRewardQuotient := params.BeaconConfig().ProposerRewardQuotient
 	for _, v := range vp {
 		if uint64(v.ProposerIndex) >= uint64(len(rewards)) {
@@ -178,9 +183,12 @@ func ProposersDelta(state state.ReadOnlyBeaconState, pBal *Balance, vp []*Valida
 		}
 		// Only apply inclusion rewards to proposer only if the attested hasn't been slashed.
 		if v.IsPrevEpochAttester && !v.IsSlashed {
-			vBalance := v.CurrentEpochEffectiveBalance
-			baseReward := vBalance * baseRewardFactor / balanceSqrt / baseRewardsPerEpoch
-			proposerReward := baseReward / proposerRewardQuotient
+			// baseReward := vBalance * baseRewardFactor / balanceSqrt / baseRewardsPerEpoch
+			baseReward := new(big.Int).SetUint64(v.CurrentEpochEffectiveBalance)
+			baseReward.Mul(baseReward, baseRewardFactor)
+			baseReward.Div(baseReward, balanceSqrt)
+			baseReward.Div(baseReward, baseRewardsPerEpoch)
+			proposerReward := baseReward.Uint64() / proposerRewardQuotient
 			rewards[v.ProposerIndex] += proposerReward
 		}
 	}

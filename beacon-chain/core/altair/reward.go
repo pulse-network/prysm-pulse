@@ -59,6 +59,11 @@ func BaseRewardPerIncrement(activeBalance *big.Int) (uint64, error) {
 		return 0, errors.New("active balance can't be 0")
 	}
 	cfg := params.BeaconConfig()
-	activeBalanceSqrt := new(big.Int).Sqrt(activeBalance).Uint64()
-	return cfg.EffectiveBalanceIncrement * cfg.BaseRewardFactor / activeBalanceSqrt, nil
+
+	// baseRewardsPerIncrement = EffectiveBalanceIncrement * BaseRewardFactor / sqrt(activeBalance)
+	baseRewardsPerIncrement := new(big.Int).SetUint64(cfg.EffectiveBalanceIncrement)
+	baseRewardsPerIncrement.Mul(baseRewardsPerIncrement, new(big.Int).SetUint64(cfg.BaseRewardFactor))
+	baseRewardsPerIncrement.Div(baseRewardsPerIncrement, new(big.Int).Sqrt(activeBalance))
+
+	return baseRewardsPerIncrement.Uint64(), nil
 }
