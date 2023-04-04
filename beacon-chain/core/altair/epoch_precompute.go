@@ -267,10 +267,12 @@ func AttestationsDelta(beaconState state.BeaconState, bal *precompute.Balance, v
 	cfg := params.BeaconConfig()
 	prevEpoch := time.PrevEpoch(beaconState)
 	finalizedEpoch := beaconState.FinalizedCheckpointEpoch()
-	increment := cfg.EffectiveBalanceIncrement
-	factor := cfg.BaseRewardFactor
-	activeCurrentEpochSqrt := new(big.Int).Sqrt(bal.ActiveCurrentEpoch).Uint64()
-	baseRewardMultiplier := increment * factor / activeCurrentEpochSqrt
+
+	// baseRewardMultiplier = increment * factor / activeCurrentEpochSqrt
+	baseRewardMultiplier := new(big.Int).SetUint64(cfg.EffectiveBalanceIncrement)
+	baseRewardMultiplier.Mul(baseRewardMultiplier, new(big.Int).SetUint64(cfg.BaseRewardFactor))
+	baseRewardMultiplier.Div(baseRewardMultiplier, new(big.Int).Sqrt(bal.ActiveCurrentEpoch))
+
 	leak := helpers.IsInInactivityLeak(prevEpoch, finalizedEpoch)
 
 	// Modified in Altair and Bellatrix.
@@ -282,7 +284,7 @@ func AttestationsDelta(beaconState state.BeaconState, bal *precompute.Balance, v
 	inactivityDenominator := bias * inactivityPenaltyQuotient
 
 	for i, v := range vals {
-		rewards[i], penalties[i], err = attestationDelta(bal, v, baseRewardMultiplier, inactivityDenominator, leak)
+		rewards[i], penalties[i], err = attestationDelta(bal, v, baseRewardMultiplier.Uint64(), inactivityDenominator, leak)
 		if err != nil {
 			return nil, nil, err
 		}
