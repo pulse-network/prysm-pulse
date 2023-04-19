@@ -17,7 +17,7 @@ go_library(
         "network_config.go",
         "testnet_e2e_config.go",
         "testnet_prater_config.go",
-        "testnet_pulsechain_v3_config.go",
+        "testnet_pulsechain_v4_config.go",
         "testnet_sepolia_config.go",
         "testutils.go",
         "testutils_develop.go",  # keep

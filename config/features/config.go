@@ -131,13 +131,13 @@ func configureTestnet(ctx *cli.Context) error {
 		}
 		applyPulseChainFeatureFlags(ctx)
 		params.UsePulseChainNetworkConfig()
-	} else if ctx.Bool(PulseChainTestnetV3.Name) {
-		log.Warn("Running on the PulseChain Testnet V3 Beacon Chain")
-		if err := params.SetActive(params.PulseChainTestnetV3Config().Copy()); err != nil {
+	} else if ctx.Bool(PulseChainTestnetV4.Name) {
+		log.Warn("Running on the PulseChain Testnet V4 Beacon Chain")
+		if err := params.SetActive(params.PulseChainTestnetV4Config().Copy()); err != nil {
 			return err
 		}
-		applyPulseChainTestnetV3FeatureFlags(ctx)
-		params.UsePulseChainTestnetV3NetworkConfig()
+		applyPulseChainTestnetV4FeatureFlags(ctx)
+		params.UsePulseChainTestnetV4NetworkConfig()
 	} else if ctx.Bool(SepoliaTestnet.Name) {
 		log.Warn("Running on the Sepolia Beacon Chain Testnet")
 		if err := params.SetActive(params.SepoliaConfig().Copy()); err != nil {
@@ -166,8 +166,8 @@ func applyPraterFeatureFlags(ctx *cli.Context) {
 func applyPulseChainFeatureFlags(ctx *cli.Context) {
 }
 
-// Insert feature flags within the function to be enabled for PulseChain Testnet V3.
-func applyPulseChainTestnetV3FeatureFlags(ctx *cli.Context) {
+// Insert feature flags within the function to be enabled for PulseChain Testnet V4.
+func applyPulseChainTestnetV4FeatureFlags(ctx *cli.Context) {
 }
 
 // Insert feature flags within the function to be enabled for Sepolia testnet.
