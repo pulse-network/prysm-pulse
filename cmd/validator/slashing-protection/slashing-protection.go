@@ -23,7 +23,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnetV3,
+				features.PulseChainTestnetV4,
 				features.SepoliaTestnet,
 			}),
 			// Before: tos.VerifyTosAcceptedOrPrompt,
@@ -49,7 +49,7 @@ var Commands = &cli.Command{
 				features.Mainnet,
 				features.PulseChain,
 				features.PraterTestnet,
-				features.PulseChainTestnetV3,
+				features.PulseChainTestnetV4,
 				features.SepoliaTestnet,
 			}),
 			Before: func(cliCtx *cli.Context) error {
