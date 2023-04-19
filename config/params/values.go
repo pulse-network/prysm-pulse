@@ -11,6 +11,6 @@ const (
 	MinimalName             = "minimal"
 	PraterName              = "prater"
 	GoerliName              = "goerli"
-	PulseChainTestnetV3Name = "pulsechain-testnet-v3"
+	PulseChainTestnetV4Name = "pulsechain-testnet-v4"
 	SepoliaName             = "sepolia"
 )
