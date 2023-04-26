@@ -23,6 +23,7 @@ rm .bazel-in-docker-outputs
 # load new images into docker
 docker load -i bazel-bin/cmd/beacon-chain/image_bundle.tar
 docker load -i bazel-bin/cmd/validator/image_bundle.tar
+docker load -i bazel-bin/cmd/prysmctl/image_bundle.tar
 
 # finish up
 echo ""

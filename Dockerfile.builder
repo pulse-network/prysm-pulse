@@ -29,5 +29,6 @@ RUN git config --global --add safe.directory /app
 # perform the build then print output directories
 CMD bazel build --stamp --workspace_status_command=./hack/workspace_status.sh //cmd/beacon-chain:image_bundle.tar --config=release && \
     bazel build --stamp --workspace_status_command=./hack/workspace_status.sh //cmd/validator:image_bundle.tar --config=release && \
+    bazel build --stamp --workspace_status_command=./hack/workspace_status.sh //cmd/prysmctl:image_bundle.tar --config=release && \
     ls -l | grep -o bazel-.* | sed 's/\/root\/.cache/.bazel-in-docker-cache/g' | awk '{print "ln -sf " $3 " " $1}' > .bazel-in-docker-outputs && \
     chmod 666 .bazel-in-docker-outputs
