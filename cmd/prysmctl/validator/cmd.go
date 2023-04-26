@@ -9,7 +9,6 @@ import (
 	"github.com/prysmaticlabs/prysm/v4/cmd/validator/accounts"
 	"github.com/prysmaticlabs/prysm/v4/cmd/validator/flags"
 	"github.com/prysmaticlabs/prysm/v4/config/features"
-	"github.com/prysmaticlabs/prysm/v4/runtime/tos"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -88,14 +87,13 @@ var Commands = []*cli.Command{
 					ConfirmFlag,
 					VerifyOnlyFlag,
 					cmd.ConfigFileFlag,
-					cmd.AcceptTosFlag,
 				},
 				Before: func(cliCtx *cli.Context) error {
 					if err := cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags); err != nil {
 						return err
 					}
 					au := aurora.NewAurora(true)
-					if !cliCtx.Bool(cmd.AcceptTosFlag.Name) || !cliCtx.Bool(ConfirmFlag.Name) {
+					if !cliCtx.Bool(ConfirmFlag.Name) {
 						fmt.Println(au.Red("===============IMPORTANT==============="))
 						fmt.Println(au.Red("Please read the following carefully"))
 						fmt.Print("This action will allow the partial withdrawal of amounts over the 32 staked ETH in your active validator balance. \n" +
@@ -103,9 +101,8 @@ var Commands = []*cli.Command{
 							"Please navigate to our website (https://docs.prylabs.network/) and make sure you understand the full implications of setting your withdrawal address. \n")
 						fmt.Println(au.Red("THIS ACTION WILL NOT BE REVERSIBLE ONCE INCLUDED. "))
 						fmt.Println(au.Red("You will NOT be able to change the address again once changed. "))
-						return fmt.Errorf("both the `--%s` and `--%s` flags are required to run this command. \n"+
-							"By providing these flags the user has read and accepts the TERMS AND CONDITIONS: https://github.com/prysmaticlabs/prysm/blob/master/TERMS_OF_SERVICE.md "+
-							"and confirms the action of setting withdrawals addresses", cmd.AcceptTosFlag.Name, ConfirmFlag.Name)
+						return fmt.Errorf("the `--%s` flag is required to run this command. \n"+
+							"By providing this flag the user accepts full responsibility for the action of setting withdrawals addresses", ConfirmFlag.Name)
 					} else {
 						return nil
 					}
@@ -169,13 +166,9 @@ var Commands = []*cli.Command{
 					features.Mainnet,
 					features.PraterTestnet,
 					features.SepoliaTestnet,
-					cmd.AcceptTosFlag,
 				}),
 				Before: func(cliCtx *cli.Context) error {
 					if err := cmd.LoadFlagsFromConfig(cliCtx, cliCtx.Command.Flags); err != nil {
-						return err
-					}
-					if err := tos.VerifyTosAcceptedOrPrompt(cliCtx); err != nil {
 						return err
 					}
 					return features.ConfigureValidator(cliCtx)
