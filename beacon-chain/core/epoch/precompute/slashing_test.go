@@ -22,7 +22,8 @@ func TestProcessSlashingsPrecompute_NotSlashedWithSlashedTrue(t *testing.T) {
 		Slashings:  []uint64{0, 1e9},
 	})
 	require.NoError(t, err)
-	pBal := &precompute.Balance{ActiveCurrentEpoch: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)}
+	pBal := precompute.NewBalance()
+	pBal.ActiveCurrentEpoch = new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
 	require.NoError(t, precompute.ProcessSlashingsPrecompute(s, pBal))
 
 	wanted := params.BeaconConfig().MaxEffectiveBalance
@@ -37,7 +38,8 @@ func TestProcessSlashingsPrecompute_NotSlashedWithSlashedFalse(t *testing.T) {
 		Slashings:  []uint64{0, 1e9},
 	})
 	require.NoError(t, err)
-	pBal := &precompute.Balance{ActiveCurrentEpoch: new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)}
+	pBal := precompute.NewBalance()
+	pBal.ActiveCurrentEpoch = new(big.Int).SetUint64(params.BeaconConfig().MaxEffectiveBalance)
 	require.NoError(t, precompute.ProcessSlashingsPrecompute(s, pBal))
 
 	wanted := params.BeaconConfig().MaxEffectiveBalance
@@ -121,8 +123,8 @@ func TestProcessSlashingsPrecompute_SlashedLess(t *testing.T) {
 				}
 				ab.Add(ab, new(big.Int).SetUint64(b))
 			}
-			pBal := &precompute.Balance{ActiveCurrentEpoch: ab}
-
+			pBal := precompute.NewBalance()
+			pBal.ActiveCurrentEpoch = ab
 			original := proto.Clone(tt.state)
 			state, err := state_native.InitializeFromProtoPhase0(tt.state)
 			require.NoError(t, err)

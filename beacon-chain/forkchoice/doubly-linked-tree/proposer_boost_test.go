@@ -2,6 +2,7 @@ package doublylinkedtree
 
 import (
 	"context"
+	"math/big"
 	"testing"
 	"time"
 
@@ -34,7 +35,7 @@ func TestForkChoice_BoostProposerRoot_PreventsExAnteAttack(t *testing.T) {
 	t.Run("back-propagates boost score to ancestors after proposer boosting", func(t *testing.T) {
 		f := setup(jEpoch, fEpoch)
 		f.justifiedBalances = balances
-		f.store.committeeWeight = uint64(len(balances)*10) / uint64(params.BeaconConfig().SlotsPerEpoch)
+		f.store.committeeWeight = new(big.Int).SetUint64(uint64(len(balances)*10) / uint64(params.BeaconConfig().SlotsPerEpoch))
 		f.numActiveValidators = uint64(len(balances))
 
 		// The head should always start at the finalized block.
@@ -323,7 +324,7 @@ func TestForkChoice_BoostProposerRoot_PreventsExAnteAttack(t *testing.T) {
 		//	Block D received at N+3 — D is head
 		f := setup(jEpoch, fEpoch)
 		f.justifiedBalances = balances
-		f.store.committeeWeight = uint64(len(balances)*10) / uint64(params.BeaconConfig().SlotsPerEpoch)
+		f.store.committeeWeight = new(big.Int).SetUint64(uint64(len(balances)*10) / uint64(params.BeaconConfig().SlotsPerEpoch))
 		f.numActiveValidators = uint64(len(balances))
 		a := zeroHash
 
