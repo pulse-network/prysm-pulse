@@ -6,18 +6,18 @@ import (
 	"testing"
 
 	"github.com/prysmaticlabs/go-bitfield"
-	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/altair"
-	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/helpers"
-	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/signing"
-	"github.com/prysmaticlabs/prysm/v3/beacon-chain/core/time"
-	p2pType "github.com/prysmaticlabs/prysm/v3/beacon-chain/p2p/types"
-	"github.com/prysmaticlabs/prysm/v3/config/params"
-	types "github.com/prysmaticlabs/prysm/v3/consensus-types/primitives"
-	"github.com/prysmaticlabs/prysm/v3/crypto/bls"
-	ethpb "github.com/prysmaticlabs/prysm/v3/proto/prysm/v1alpha1"
-	"github.com/prysmaticlabs/prysm/v3/testing/require"
-	"github.com/prysmaticlabs/prysm/v3/testing/util"
-	"github.com/prysmaticlabs/prysm/v3/time/slots"
+	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/altair"
+	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/helpers"
+	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/signing"
+	"github.com/prysmaticlabs/prysm/v4/beacon-chain/core/time"
+	p2pType "github.com/prysmaticlabs/prysm/v4/beacon-chain/p2p/types"
+	"github.com/prysmaticlabs/prysm/v4/config/params"
+	types "github.com/prysmaticlabs/prysm/v4/consensus-types/primitives"
+	"github.com/prysmaticlabs/prysm/v4/crypto/bls"
+	ethpb "github.com/prysmaticlabs/prysm/v4/proto/prysm/v1alpha1"
+	"github.com/prysmaticlabs/prysm/v4/testing/require"
+	"github.com/prysmaticlabs/prysm/v4/testing/util"
+	"github.com/prysmaticlabs/prysm/v4/time/slots"
 )
 
 func TestPulseChainValidatorRewardsMock(t *testing.T) {
@@ -85,7 +85,7 @@ func TestPulseChainValidatorRewardsMock(t *testing.T) {
 		}
 
 		// Process Sync aggregation and process rewards
-		beaconState, err = altair.ProcessSyncAggregate(context.Background(), beaconState, syncAggregate)
+		beaconState, _, err = altair.ProcessSyncAggregate(context.Background(), beaconState, syncAggregate)
 		require.NoError(t, err)
 
 		// If epoch passed - process participation and rewards

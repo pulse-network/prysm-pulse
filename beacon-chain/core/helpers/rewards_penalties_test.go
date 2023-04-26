@@ -146,7 +146,7 @@ func TestIncreaseBalance_OK(t *testing.T) {
 
 func TestIncreaseBalanceWithBurn_OK(t *testing.T) {
 	tests := []struct {
-		i  types.ValidatorIndex
+		i  primitives.ValidatorIndex
 		b  []uint64
 		nb uint64
 		eb uint64

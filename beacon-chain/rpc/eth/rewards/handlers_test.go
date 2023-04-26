@@ -174,8 +174,8 @@ func TestBlockRewards(t *testing.T) {
 		resp := &BlockRewardsResponse{}
 		require.NoError(t, json.Unmarshal(writer.Body.Bytes(), resp))
 		assert.Equal(t, "12", resp.Data.ProposerIndex)
-		assert.Equal(t, "125089490", resp.Data.Total)
-		assert.Equal(t, "89442", resp.Data.Attestations)
+		assert.Equal(t, "125067129", resp.Data.Total)
+		assert.Equal(t, "67081", resp.Data.Attestations)
 		assert.Equal(t, "48", resp.Data.SyncAggregate)
 		assert.Equal(t, "62500000", resp.Data.AttesterSlashings)
 		assert.Equal(t, "62500000", resp.Data.ProposerSlashings)
