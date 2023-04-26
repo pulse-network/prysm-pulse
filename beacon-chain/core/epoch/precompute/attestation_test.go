@@ -71,15 +71,7 @@ func TestUpdateBalance(t *testing.T) {
 		PrevEpochTargetAttested:    ebiTimesHundred,
 		PrevEpochHeadAttested:      ebiTimesTwoHundred,
 	}
-	pBal := &precompute.Balance{
-		ActiveCurrentEpoch:         big.NewInt(0),
-		ActivePrevEpoch:            big.NewInt(0),
-		CurrentEpochAttested:       big.NewInt(0),
-		CurrentEpochTargetAttested: big.NewInt(0),
-		PrevEpochAttested:          big.NewInt(0),
-		PrevEpochHeadAttested:      big.NewInt(0),
-		PrevEpochTargetAttested:    big.NewInt(0),
-	}
+	pBal := precompute.NewBalance()
 	pBal = precompute.UpdateBalance(vp, pBal, version.Phase0)
 	assert.DeepEqual(t, wantedPBal, pBal, "Incorrect balance calculations")
 }
@@ -107,19 +99,11 @@ func TestUpdateBalanceDifferentVersions(t *testing.T) {
 		PrevEpochTargetAttested:    ebiTimesHundred,
 		PrevEpochHeadAttested:      ebiTimesTwoHundred,
 	}
-	pBal := &precompute.Balance{
-		ActiveCurrentEpoch:         big.NewInt(0),
-		ActivePrevEpoch:            big.NewInt(0),
-		CurrentEpochAttested:       big.NewInt(0),
-		CurrentEpochTargetAttested: big.NewInt(0),
-		PrevEpochAttested:          big.NewInt(0),
-		PrevEpochHeadAttested:      big.NewInt(0),
-		PrevEpochTargetAttested:    big.NewInt(0),
-	}
+	pBal := precompute.NewBalance()
 	pBal = precompute.UpdateBalance(vp, pBal, version.Bellatrix)
 	assert.DeepEqual(t, wantedPBal, pBal, "Incorrect balance calculations")
 
-	pBal = precompute.UpdateBalance(vp, &precompute.Balance{}, version.Capella)
+	pBal = precompute.UpdateBalance(vp, precompute.NewBalance(), version.Capella)
 	assert.DeepEqual(t, wantedPBal, pBal, "Incorrect balance calculations")
 }
 

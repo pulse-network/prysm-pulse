@@ -721,14 +721,14 @@ func TestWeight(t *testing.T) {
 
 	n, ok := f.store.nodeByRoot[root]
 	require.Equal(t, true, ok)
-	n.weight = 10
+	n.weight = big.NewInt(10)
 	w, err := f.Weight(root)
 	require.NoError(t, err)
-	require.Equal(t, uint64(10), w)
+	require.Equal(t, uint64(10), w.Uint64())
 
 	w, err = f.Weight([32]byte{'b'})
 	require.ErrorIs(t, err, ErrNilNode)
-	require.Equal(t, uint64(0), w)
+	require.Equal(t, uint64(0), w.Uint64())
 }
 
 func TestForkchoice_UpdateJustifiedBalances(t *testing.T) {
@@ -739,7 +739,7 @@ func TestForkchoice_UpdateJustifiedBalances(t *testing.T) {
 	}
 	require.NoError(t, f.updateJustifiedBalances(context.Background(), [32]byte{}))
 	require.Equal(t, uint64(7), f.numActiveValidators)
-	require.Equal(t, uint64(430)/32, f.store.committeeWeight)
+	require.Equal(t, uint64(430)/32, f.store.committeeWeight.Uint64())
 	require.DeepEqual(t, balances, f.justifiedBalances)
 }
 

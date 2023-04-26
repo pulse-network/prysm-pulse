@@ -58,14 +58,8 @@ func TestNew(t *testing.T) {
 		InclusionSlot:                e,
 	}, v[3], "Incorrect validator 3 status")
 
-	wantedBalances := &precompute.Balance {
-		ActiveCurrentEpoch:         big.NewInt(100),
-		ActivePrevEpoch:            big.NewInt(200),
-		CurrentEpochAttested:       big.NewInt(0),
-		CurrentEpochTargetAttested: big.NewInt(0),
-		PrevEpochAttested:          big.NewInt(0),
-		PrevEpochHeadAttested:      big.NewInt(0),
-		PrevEpochTargetAttested:    big.NewInt(0),
-	}
+	wantedBalances := precompute.NewBalance()
+	wantedBalances.ActiveCurrentEpoch = big.NewInt(100)
+	wantedBalances.ActivePrevEpoch = big.NewInt(200)
 	assert.DeepEqual(t, wantedBalances, b, "Incorrect wanted balance")
 }

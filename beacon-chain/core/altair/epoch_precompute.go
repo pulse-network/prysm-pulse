@@ -19,15 +19,7 @@ func InitializePrecomputeValidators(ctx context.Context, beaconState state.Beaco
 	ctx, span := trace.StartSpan(ctx, "altair.InitializePrecomputeValidators")
 	defer span.End()
 	vals := make([]*precompute.Validator, beaconState.NumValidators())
-	bal := &precompute.Balance{
-		ActiveCurrentEpoch:         big.NewInt(0),
-		ActivePrevEpoch:            big.NewInt(0),
-		CurrentEpochAttested:       big.NewInt(0),
-		CurrentEpochTargetAttested: big.NewInt(0),
-		PrevEpochAttested:          big.NewInt(0),
-		PrevEpochHeadAttested:      big.NewInt(0),
-		PrevEpochTargetAttested:    big.NewInt(0),
-	}
+	bal := precompute.NewBalance()
 	prevEpoch := time.PrevEpoch(beaconState)
 	currentEpoch := time.CurrentEpoch(beaconState)
 	inactivityScores, err := beaconState.InactivityScores()

@@ -3,8 +3,8 @@ package pulse
 import (
 	"testing"
 
-	"github.com/prysmaticlabs/prysm/v3/config/params"
-	"github.com/prysmaticlabs/prysm/v3/testing/require"
+	"github.com/prysmaticlabs/prysm/v4/config/params"
+	"github.com/prysmaticlabs/prysm/v4/testing/require"
 )
 
 func TestApplyBurn(t *testing.T) {

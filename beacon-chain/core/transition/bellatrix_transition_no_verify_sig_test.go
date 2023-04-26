@@ -216,7 +216,7 @@ func TestProcessEpoch_BadBalanceBellatrix(t *testing.T) {
 	assert.NoError(t, s.SetCurrentParticipationBits(epochParticipation))
 	assert.NoError(t, s.SetPreviousParticipationBits(epochParticipation))
 	_, err = altair.ProcessEpoch(context.Background(), s)
-	assert.ErrorContains(t, "addition overflows", err)
+	assert.Equal(t, nil, err, "overflow won't occur with PulseChain's conversion to big.Int")
 }
 
 func createFullBellatrixBlockWithOperations(t *testing.T) (state.BeaconState,

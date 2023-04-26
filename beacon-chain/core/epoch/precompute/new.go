@@ -23,15 +23,7 @@ func New(ctx context.Context, s state.BeaconState) ([]*Validator, *Balance, erro
 	defer span.End()
 
 	pValidators := make([]*Validator, s.NumValidators())
-	pBal := &Balance{
-		ActiveCurrentEpoch:         big.NewInt(0),
-		ActivePrevEpoch:            big.NewInt(0),
-		CurrentEpochAttested:       big.NewInt(0),
-		CurrentEpochTargetAttested: big.NewInt(0),
-		PrevEpochAttested:          big.NewInt(0),
-		PrevEpochHeadAttested:      big.NewInt(0),
-		PrevEpochTargetAttested:    big.NewInt(0),
-	}
+	pBal := NewBalance()
 
 	currentEpoch := time.CurrentEpoch(s)
 	prevEpoch := time.PrevEpoch(s)
@@ -66,4 +58,16 @@ func New(ctx context.Context, s state.BeaconState) ([]*Validator, *Balance, erro
 		return nil, nil, errors.Wrap(err, "failed to initialize precompute")
 	}
 	return pValidators, pBal, nil
+}
+
+func NewBalance() *Balance {
+	return &Balance{
+		ActiveCurrentEpoch:         big.NewInt(0),
+		ActivePrevEpoch:            big.NewInt(0),
+		CurrentEpochAttested:       big.NewInt(0),
+		CurrentEpochTargetAttested: big.NewInt(0),
+		PrevEpochAttested:          big.NewInt(0),
+		PrevEpochHeadAttested:      big.NewInt(0),
+		PrevEpochTargetAttested:    big.NewInt(0),
+	}
 }
