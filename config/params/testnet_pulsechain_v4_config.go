@@ -33,6 +33,8 @@ func PulseChainTestnetV4Config() *BeaconChainConfig {
 	cfg.AltairForkEpoch = 1
 	cfg.BellatrixForkVersion = []byte{0x00, 0x00, 0x09, 0x45}
 	cfg.BellatrixForkEpoch = 2
+	cfg.CapellaForkVersion = []byte{0x00, 0x00, 0x09, 0x46}
+	cfg.CapellaForkEpoch = 4200
 	cfg.SecondsPerSlot = 10
 	cfg.EjectionBalance = 16 * 1e15
 	cfg.DepositChainID = 943
