@@ -149,8 +149,11 @@ func displayExitInfo(rawExitedKeys [][]byte, trimmedExitedKeys []string) {
 		urlFormattedPubKeys := make([]string, len(rawExitedKeys))
 		for i, key := range rawExitedKeys {
 			var baseUrl string
-			// TODO: Add URLs for PulseChain explorer.
-			if params.BeaconConfig().ConfigName == params.PraterName || params.BeaconConfig().ConfigName == params.GoerliName {
+			if params.BeaconConfig().ConfigName == params.PulseChainName {
+				baseUrl = "https://beacon.pulsechain.com/validator/"
+			} else if params.BeaconConfig().ConfigName == params.PulseChainTestnetV4Name {
+				baseUrl = "https://beacon.v4.testnet.pulsechain.com/validator/"
+			} else if params.BeaconConfig().ConfigName == params.PraterName || params.BeaconConfig().ConfigName == params.GoerliName {
 				baseUrl = "https://goerli.beaconcha.in/validator/"
 			} else {
 				baseUrl = "https://beaconcha.in/validator/"
