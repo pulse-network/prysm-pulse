@@ -6,7 +6,7 @@ const (
 	EndToEndMainnetName     = "end-to-end-mainnet"
 	InteropName             = "interop"
 	MainnetName             = "mainnet"
-	PulseChainName          = "pulsechain-mainnet"
+	PulseChainName          = "pulsechain"
 	MainnetTestName         = "mainnet-test"
 	MinimalName             = "minimal"
 	PraterName              = "prater"
